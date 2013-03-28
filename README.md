@@ -12,3 +12,16 @@ The goal here is to provide Akka with a scheduling system that is closer to what
 Evolving, subject to change, and not curently for public consumption.
 
 
+I don't plan on having anything to do with the distributed transaction, persistence, clustering or any other nonsense anytime soon. This is for cron-ey type timing and scheduling.
+ 
+There is the ability in Quartz to pass JobDataMaps around that accrue mutable state across job ticks; we currently do NOT support that to enforce integrity but may expose a deeper actor structure later that gives some ability to work around that, if need arises.
+
+TODO
+––––
+find a way to replace quartz.properties with typesafe / akka config and merge over
+ensure the actorsystem shutdown can shut the scheduler in the extension down
+job scheduling
+job execution
+investigate supporting listeners, with actor hookarounds.
+model job as actor in a way that is meaningful
+misfires and recovery model - play nice with supervision, deathwatch, etc [docs page 23 - very close to supervision strategy]
