@@ -18,10 +18,10 @@ There is the ability in Quartz to pass JobDataMaps around that accrue mutable st
 
 TODO
 ––––
-find a way to replace quartz.properties with typesafe / akka config and merge over
-ensure the actorsystem shutdown can shut the scheduler in the extension down
-job scheduling
-job execution
-investigate supporting listeners, with actor hookarounds.
-model job as actor in a way that is meaningful
-misfires and recovery model - play nice with supervision, deathwatch, etc [docs page 23 - very close to supervision strategy]
+- find a way to replace quartz.properties with typesafe / akka config and merge over
+- ensure the actorsystem shutdown can shut the scheduler in the extension down
+- job scheduling
+- job execution
+- investigate supporting listeners, with actor hookarounds.
+- model job as actor in a way that is meaningful
+- misfires and recovery model - play nice with supervision, deathwatch, etc [docs page 23 - very close to supervision strategy]
