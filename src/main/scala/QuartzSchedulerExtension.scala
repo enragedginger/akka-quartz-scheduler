@@ -7,6 +7,7 @@ import com.typesafe.config.{ConfigFactory, Config}
 
 import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
 import org.quartz.impl.DirectSchedulerFactory
+import java.util.TimeZone
 
 
 object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension]
@@ -33,6 +34,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
         threadPriority = 5
         daemonThreads = true
       }
+      defaultTimezone = UTC
     }
     """.stripMargin)  // todo - boundary checks
 
@@ -44,6 +46,8 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
           "Quartz Thread Priority (akka.quartz.threadPool.threadPriority) must be a positive integer between 1 (lowest) and 10 (highest).")
   // Should the threads we create be daemonic? FYI Non-daemonic threads could make akka / jvm shutdown difficult
   val daemonThreads_? = config.getBoolean("akka.quartz.threadPool.daemonThreads")
+  // Timezone to use unless specified otherwise
+  val defaultTimezone = TimeZone.getTimeZone(config.getString("defaultTimezone"))
 
   initialiseCalendars()
 
