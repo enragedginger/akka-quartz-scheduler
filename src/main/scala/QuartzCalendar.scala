@@ -9,9 +9,7 @@ import org.quartz.impl.calendar._
 
 import scala.collection.JavaConverters._
 import java.text.{ParseException, SimpleDateFormat}
-import scala.Left
-import scala.Right
-import java.util
+import collection.immutable
 
 /**
  * Utility classes around the creation and configuration of Quartz Calendars.
@@ -73,12 +71,15 @@ object QuartzCalendars {
   val timeFmt = new SimpleDateFormat("HH:mm")
   val timeWSecondsFmt = new SimpleDateFormat("HH:mm:ss")
 
-  def apply(config: Config, defaultTimezone: TimeZone): Seq[Calendar] = catchMissing opt {
-    config.getConfig("akka.quartz.calendars").root.asScala.flatMap {
-      case (key, value: ConfigObject) => parseCalendar(key, value.toConfig, defaultTimezone)
-      case _ => None
-    }.toSeq
-  } getOrElse Seq.empty[Calendar]
+  def apply(config: Config, defaultTimezone: TimeZone): immutable.Map[String, Calendar] = catchMissing opt {
+    /** the extra toMap call is because the asScala gives us a mutable map... */
+    config.getConfig("akka.quartz.calendars").root.asScala.toMap.flatMap {
+      case (key, value: ConfigObject) =>
+        Some(key -> parseCalendar(key, value.toConfig, defaultTimezone))
+      case _ =>
+        None
+    }
+  } getOrElse immutable.Map.empty[String, Calendar]
 
   def parseAnnualCalendar(name: String, config: Config): AnnualCalendar = {
     val excludeDates = catchMissing or catchWrongType either { config.getStringList("excludeDates") } match {
@@ -102,12 +103,12 @@ object QuartzCalendars {
   }
 
   def parseHolidayCalendar(name: String, config: Config): HolidayCalendar = new HolidayCalendar
-  def parseDailyCalendar(name: String, config: Config): DailyCalendar = new DailyCalendar("", "")
+  def parseDailyCalendar(name: String, config: Config): DailyCalendar = new DailyCalendar("01:00:01", "02:05:00")
   def parseWeeklyCalendar(name: String, config: Config): WeeklyCalendar = new WeeklyCalendar
   def parseMonthlyCalendar(name: String, config: Config): MonthlyCalendar = new MonthlyCalendar
-  def parseCronCalendar(name: String, config: Config): CronCalendar = new CronCalendar("")
+  def parseCronCalendar(name: String, config: Config): CronCalendar = new CronCalendar("* * 0-7,18-23 ? * *")
 
-  def parseCalendar(name: String, config: Config, defaultTimezone: TimeZone): Option[Calendar] = {
+  def parseCalendar(name: String, config: Config, defaultTimezone: TimeZone): Calendar = {
     println("Parsing Calendar '%s'".format(name))
     // parse common attributes
     val timezone = catchMissing opt {
@@ -133,7 +134,7 @@ object QuartzCalendars {
         }
         description.foreach{cal.setDescription}
         cal.setTimeZone(timezone)
-        Some(cal)
+        cal
     }
   }
 }
