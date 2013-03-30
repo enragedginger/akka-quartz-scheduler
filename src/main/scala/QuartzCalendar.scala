@@ -81,13 +81,13 @@ object QuartzCalendars {
     }
   } getOrElse immutable.Map.empty[String, Calendar]
 
-  def parseAnnualCalendar(name: String, config: Config): AnnualCalendar = {
+  def parseAnnualCalendar(name: String, config: Config)(tz: TimeZone): AnnualCalendar = {
     val excludeDates = catchMissing or catchWrongType either { config.getStringList("excludeDates") } match {
       case Left(t) =>
         throw new IllegalArgumentException("Invalid or Missing Configuration entry 'excludeDates' for Annual calendar. You must provide a list of ISO-8601 compliant dates ('YYYY-MM-DD').", t)
       case Right(dates) => dates.asScala.map { d =>
         catchParseErr either {
-          val c = java.util.Calendar.getInstance()
+          val c = java.util.Calendar.getInstance(tz)
           c.setTime(dateFmt.parse(d))
           c
         } match {
@@ -124,7 +124,7 @@ object QuartzCalendars {
       case Left(_) => throw new IllegalArgumentException("Calendar Type must be defined.")
       case Right(typ) =>
         val cal = typ.toUpperCase match {
-          case "ANNUAL" => parseAnnualCalendar(name, config)
+          case "ANNUAL" => parseAnnualCalendar(name, config)(timezone)
           case "HOLIDAY" => parseHolidayCalendar(name, config)
           case "DAILY" => parseDailyCalendar(name, config)
           case "MONTHLY" => parseMonthlyCalendar(name, config)

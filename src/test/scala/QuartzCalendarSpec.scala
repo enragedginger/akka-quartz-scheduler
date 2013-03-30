@@ -7,8 +7,8 @@ import org.junit.runner.RunWith
 import org.specs2.matcher.ThrownExpectations
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
-import java.util.{Date, TimeZone}
-import org.quartz.impl.calendar.AnnualCalendar
+import java.util.{Calendar, GregorianCalendar, Date, TimeZone}
+import org.quartz.impl.calendar.{HolidayCalendar, AnnualCalendar}
 
 @RunWith(classOf[JUnitRunner])
 class QuartzCalendarSpec extends Specification with ThrownExpectations { def is =
@@ -36,22 +36,37 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     calendars must have size(8)
   }
 
+  import scala.collection.JavaConverters._
   def parseAnnual = {
     calendars must haveKey("WinterClosings")
     calendars("WinterClosings") must haveClass[AnnualCalendar]
     val cal = calendars("WinterClosings").asInstanceOf[AnnualCalendar]
-    cal.isTimeIncluded(new Date(2000,12,25).getTime) must beTrue
-    cal.isTimeIncluded(new Date(2013,12,25).getTime) must beTrue
-    cal.isTimeIncluded(new Date(2023,12,25).getTime) must beTrue
-    cal.isTimeIncluded(new Date(2000,01,01).getTime) must beTrue
-    cal.isTimeIncluded(new Date(2013,01,01).getTime) must beTrue
-    cal.isTimeIncluded(new Date(2023,01,01).getTime) must beTrue
-    cal.isTimeIncluded(new Date(2023-01-02).getTime) must beFalse
+    cal.getDaysExcluded.asScala.foreach(println)
+    cal.isDayExcluded(getCalendar(new Date(2000,12,25))) must beTrue
+    cal.isDayExcluded(getCalendar(new Date(2013,12,25))) must beTrue
+    cal.isDayExcluded(getCalendar(new Date(2023,12,25))) must beTrue
+    cal.isDayExcluded(getCalendar(new Date(2000,01,01))) must beTrue
+    cal.isDayExcluded(getCalendar(new Date(2013,01,01))) must beTrue
+    cal.isDayExcluded(getCalendar(new Date(2023,01,01))) must beTrue
+    cal.isDayExcluded(getCalendar(new Date(2023,01,03))) must beFalse
   }
 
   def parseHoliday = {
-    todo
+    calendars must haveKey("Easter")
+    calendars("Easter") must haveClass[HolidayCalendar]
+    val cal = calendars("Easter").asInstanceOf[HolidayCalendar]
+    /** By "TimeIncluded" the Calendar means does this calendar include an exlcusion for that time */
+    /* excludeDates = ["2013-03-31", "2014-04-20", "2015-04-05", "2016-03-27", "2017-04-16"] */
+    cal.isTimeIncluded(new Date(2013,03,31).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2014,04,20).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2015,04,05).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2016,03,27).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2017,04,16).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2017,04,17).getTime) must beFalse
+    cal.isTimeIncluded(new Date(2023,12,25).getTime) must beFalse
+    cal.isTimeIncluded(new Date(2023,01,02).getTime) must beFalse
   }
+
   def parseDaily = {
     todo
   }
@@ -78,7 +93,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
           WinterClosings {
             type = Annual
             description = "Major holiday dates that occur in the winter time every year, non-moveable"
-            excludeDates = ["2013-12-25", "2014-01-01"]
+            excludeDates = ["2000-12-25", "2000-01-01"]
           }
           Easter {
             type = Holiday
@@ -124,6 +139,12 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
         }
       }
       """.stripMargin)
+  }
+
+  def getCalendar(date: Date, tz: TimeZone = TimeZone.getTimeZone("UTC")) = {
+    val cal = Calendar.getInstance(tz)
+    cal.setTime(date)
+    cal
   }
 
   lazy val calendars = QuartzCalendars(sampleConfiguration, TimeZone.getTimeZone("UTC"))
