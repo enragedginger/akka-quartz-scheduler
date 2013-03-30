@@ -7,7 +7,8 @@ import org.junit.runner.RunWith
 import org.specs2.matcher.ThrownExpectations
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
-import java.util.TimeZone
+import java.util.{Date, TimeZone}
+import org.quartz.impl.calendar.AnnualCalendar
 
 @RunWith(classOf[JUnitRunner])
 class QuartzCalendarSpec extends Specification with ThrownExpectations { def is =
@@ -31,14 +32,23 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
                                                                 end
 
   def parseCalendarList = {
-    val calendars = QuartzCalendars(sampleConfiguration, TimeZone.getTimeZone("UTC"))
+    // tood - more robust check
     calendars must have size(8)
-
   }
 
   def parseAnnual = {
-    todo
+    calendars must haveKey("WinterClosings")
+    calendars("WinterClosings") must haveClass[AnnualCalendar]
+    val cal = calendars("WinterClosings").asInstanceOf[AnnualCalendar]
+    cal.isTimeIncluded(new Date(2000,12,25).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2013,12,25).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2023,12,25).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2000,01,01).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2013,01,01).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2023,01,01).getTime) must beTrue
+    cal.isTimeIncluded(new Date(2023-01-02).getTime) must beFalse
   }
+
   def parseHoliday = {
     todo
   }
@@ -116,5 +126,6 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
       """.stripMargin)
   }
 
+  lazy val calendars = QuartzCalendars(sampleConfiguration, TimeZone.getTimeZone("UTC"))
 
 }
