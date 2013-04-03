@@ -55,7 +55,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     cal.isDayExcluded(_day(DECEMBER, 25)) must beTrue
     cal.isDayExcluded(_day(JANUARY, 01)) must beTrue
     cal.isDayExcluded(_day(FEBRUARY, 25)) must beFalse
-    /** Check that regardless of year, we're also OK */
+    /* Check that regardless of year, we're also OK -- we defined Christmas 2000, but we can go backwards */
     cal.isDayExcluded(getCalendar(DECEMBER, 25, 1995)) must beTrue
   }
 
@@ -111,7 +111,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
         calendars {
           WinterClosings {
             type = Annual
-            description = "Major holiday dates that occur in the winter time every year, non-moveable"
+            description = "Major holiday dates that occur in the winter time every year, non-moveable (The year doesn't matter)"
             excludeDates = ["2000-12-25", "2000-01-01"]
           }
           Easter {

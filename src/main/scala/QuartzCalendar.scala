@@ -102,7 +102,27 @@ object QuartzCalendars {
     cal
   }
 
-  def parseHolidayCalendar(name: String, config: Config): HolidayCalendar = new HolidayCalendar
+  def parseHolidayCalendar(name: String, config: Config)(tz: TimeZone): HolidayCalendar = {
+    val excludeDates = catchMissing or catchWrongType either { config.getStringList("excludeDates") } match {
+      case Left(t) =>
+        throw new IllegalArgumentException("Invalid or Missing Configuration entry 'excludeDates' for Holiday Calendar. You must provide a list of ISO-8601 compliant dates ('YYYY-MM-DD').", t)
+      case Right(dates) => dates.asScala.map { d =>
+        catchParseErr either {
+          val c = java.util.Calendar.getInstance(tz)
+          c.setTime(dateFmt.parse(d))
+          c.getTime
+        } match {
+          case Left(t) =>
+            throw new IllegalArgumentException("Invalid date '%s' in Holiday Calendar 'excludeDates'. You must provide an ISO-8601 compliant date ('YYYY-MM-DD').".format(d), t)
+          case Right(dt) => dt
+        }
+      }
+    }
+    val cal = new HolidayCalendar()
+    excludeDates.foreach {  cal.addExcludedDate }
+    cal
+  }
+
   def parseDailyCalendar(name: String, config: Config): DailyCalendar = new DailyCalendar("01:00:01", "02:05:00")
   def parseWeeklyCalendar(name: String, config: Config): WeeklyCalendar = new WeeklyCalendar
   def parseMonthlyCalendar(name: String, config: Config): MonthlyCalendar = new MonthlyCalendar
@@ -125,7 +145,7 @@ object QuartzCalendars {
       case Right(typ) =>
         val cal = typ.toUpperCase match {
           case "ANNUAL" => parseAnnualCalendar(name, config)(timezone)
-          case "HOLIDAY" => parseHolidayCalendar(name, config)
+          case "HOLIDAY" => parseHolidayCalendar(name, config)(timezone)
           case "DAILY" => parseDailyCalendar(name, config)
           case "MONTHLY" => parseMonthlyCalendar(name, config)
           case "WEEKLY" => parseWeeklyCalendar(name, config)
