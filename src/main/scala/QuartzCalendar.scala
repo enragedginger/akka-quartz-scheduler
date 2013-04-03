@@ -41,9 +41,18 @@ object QuartzCalendars {
    *  only one time range PER CALENDAR.
    */
   // exclude block {
-  //    startTime = ISO-8601 Time with seconds optional (HH:mm:ss)
-  //    endTime   = ISO-8601 Time with seconds optional (HH:mm:ss)
+  //    startTime = <TIME>
+  //    endTime   = <TIME>
   // }
+  // time in the format "HH:MM[:SS[:mmm]]" where:
+  //    HH is the hour of the specified time. The hour should be specified using military (24-hour) time and must be in the range 0 to 23.
+  //    MM is the minute of the specified time and must be in the range 0 to 59.
+  //    SS is the second of the specified time and must be in the range 0 to 59.
+  //    mmm is the millisecond of the specified time and must be in the range 0 to 999.
+  //  items enclosed in brackets ('[', ']') are optional.
+  // !! The time range starting time must be before the time range ending time.
+  //    Note this means that a time range may not cross daily boundaries (10PM - 2AM) !!
+
 
   /* monthly
    *  excludes a set of days of the month.
@@ -68,8 +77,6 @@ object QuartzCalendars {
   val catchWrongType = catching(classOf[ConfigException.WrongType])
   val catchParseErr = catching(classOf[ParseException])
   val dateFmt = new SimpleDateFormat("yyyy-MM-dd")
-  val timeFmt = new SimpleDateFormat("HH:mm")
-  val timeWSecondsFmt = new SimpleDateFormat("HH:mm:ss")
 
   def apply(config: Config, defaultTimezone: TimeZone): immutable.Map[String, Calendar] = catchMissing opt {
     /** the extra toMap call is because the asScala gives us a mutable map... */
@@ -127,30 +134,23 @@ object QuartzCalendars {
   }
 
 
-  def parseDailyCalendar(name: String, config: Config)(tz: TimeZone): DailyCalendar = {
-    def parseTimeEntry(entry: String) =  catchMissing or catchWrongType either { config.getString(entry) } match {
+  def parseDailyCalendar(name: String, config: Config): DailyCalendar = {
+    def parseTimeEntry(entry: String) = catchMissing or catchWrongType either { config.getString(entry) } match {
       case Left(t) =>
-        throw new IllegalArgumentException("Invalid or Missing Configuration entry '%s' for Daily Calendar. You must provide a time in the format 'HH:mm:ss', with seconds optional.".format(entry), t)
-      case Right(rawTime) => catchParseErr opt parseFmt(rawTime, timeWSecondsFmt) getOrElse(catchParseErr either {
-        parseFmt(rawTime, timeFmt)
-      } match {
-        case Left(t) =>
-          throw new IllegalArgumentException("Invalid time '%s' in Daily Calendar '%s'. You must provide a time in the format 'HH:mm:ss', with seconds optional.".format(rawTime, entry), t)
-        case Right(d) => d
-      })
+        throw new IllegalArgumentException("Invalid or Missing Configuration entry '%s' for Daily Calendar. You must provide a time in the format 'HH:MM[:SS[:mmm]]'".format(entry), t)
+      case Right(rawTime) =>
+        rawTime
     }
 
 
     val startTime = parseTimeEntry("exclude.startTime")
     val endTime = parseTimeEntry("exclude.endTime")
 
-    // todo - just use the dailycalendar's built in parsing routine?
-    // todo - verify invariant condition re: crossing daily boundaries
-    val cal = new DailyCalendar(startTime, endTime)
+    // todo - verify invariant condition re: crossing daily boundaries( does quartz do that for us )?
+    new DailyCalendar(startTime, endTime)
   }
 
 
-    new DailyCalendar("01:00:01", "02:05:00")
   def parseWeeklyCalendar(name: String, config: Config): WeeklyCalendar = new WeeklyCalendar
   def parseMonthlyCalendar(name: String, config: Config): MonthlyCalendar = new MonthlyCalendar
   def parseCronCalendar(name: String, config: Config): CronCalendar = new CronCalendar("* * 0-7,18-23 ? * *")

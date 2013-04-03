@@ -8,7 +8,7 @@ import org.specs2.matcher.ThrownExpectations
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
 import java.util.{Calendar, GregorianCalendar, Date, TimeZone}
-import org.quartz.impl.calendar.{HolidayCalendar, AnnualCalendar}
+import org.quartz.impl.calendar.{DailyCalendar, HolidayCalendar, AnnualCalendar}
 
 @RunWith(classOf[JUnitRunner])
 class QuartzCalendarSpec extends Specification with ThrownExpectations { def is =
@@ -19,7 +19,11 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     "Fetch a list of all calenders in a configuration block"  ! parseCalendarList ^
     "Be able to parse and create an Annual calendar"          ! parseAnnual ^
     "Be able to parse and create a Holiday calendar"          ! parseHoliday ^
-    "Be able to parse and create a Daily calendar"            ! parseDaily ^
+    "Be able to parse and create a Daily calendar"            ^
+        "With a standard entry"                               ! parseDaily ^
+        "Properly adjusting to timezones"                     ! parseDailyVerifyTimezone ^
+        "Preventing 'crossing of daily boundaries' entries"   ! parseDailyVerifyBoundaries ^
+                                                            p ^
     "Be able to parse and create a Monthly calendar"          ^
         "Without a list (single digit)"                       ! parseMonthlyNoList ^
         "With a list (multiple digits)"                       ! parseMonthlyList ^
@@ -87,8 +91,27 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
   } pendingUntilFixed
 
   def parseDaily = {
+    calendars must haveKey("HourOfTheWolf")
+    calendars("HourOfTheWolf") must haveClass[DailyCalendar]
+    val cal = calendars("HourOfTheWolf").asInstanceOf[DailyCalendar]
+
+    import Calendar._
+    implicit val tz = cal.getTimeZone
+
+    // This is based on how quartz does its own testing. Not ideal.
+    cal.toString must contain("'03:00:00:000 - 05:00:00:000', inverted: false")
+  }
+
+  def parseDailyVerifyTimezone = {
+    // shouldn't be needed, as quartz tests this
     todo
   }
+
+  def parseDailyVerifyBoundaries = {
+    // shouldn't be needed, as quartz tests this
+    todo
+  }
+
   def parseMonthlyNoList = {
     todo
   }
