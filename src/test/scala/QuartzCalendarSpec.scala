@@ -8,7 +8,7 @@ import org.specs2.matcher.ThrownExpectations
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
 import java.util.{Calendar, GregorianCalendar, Date, TimeZone}
-import org.quartz.impl.calendar.{MonthlyCalendar, DailyCalendar, HolidayCalendar, AnnualCalendar}
+import org.quartz.impl.calendar._
 
 @RunWith(classOf[JUnitRunner])
 class QuartzCalendarSpec extends Specification with ThrownExpectations { def is =
@@ -16,7 +16,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
   "This is a specification to validate the behavior of the Quartz Calendar configuration modelling"   ^
                                                             p ^
   "The configuration parser should"                           ^
-    "Fetch a list of all calenders in a configuration block"  ! parseCalendarList ^
+    "Fetch a list of all calendars in a configuration block"  ! parseCalendarList ^
     "Be able to parse and create an Annual calendar"          ! parseAnnual ^
     "Be able to parse and create a Holiday calendar"          ! parseHoliday ^
     "Be able to parse and create a Daily calendar"            ^
@@ -28,17 +28,15 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
                                                             p ^
     "Be able to parse and create a Weekly calendar"           ^
         "With Ints for Day Names"                             ! parseWeeklyInt ^
-        "With Strings for Day Names"                          ! parseWeeklyString ^
                                                             p ^
     "Be able to parse and create a Cron calendar"             ! parseCronStyle ^
                                                                 end
 
   def parseCalendarList = {
     // tood - more robust check
-    calendars must have size(8)
+    calendars must have size(7)
   }
 
-  import scala.collection.JavaConverters._
   def parseAnnual = {
     calendars must haveKey("WinterClosings")
     calendars("WinterClosings") must haveClass[AnnualCalendar]
@@ -100,27 +98,42 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     cal.toString must contain("'03:00:00:000 - 05:00:00:000', inverted: false")
   }
 
-  def _dayRange(days: List[Int]) = (1 to 31) map { d => (days contains d) }
+  def _monthDayRange(days: List[Int]) = (1 to 31) map { d => (days contains d) }
+
+  // for some inexplicable reason WeeklyCalendar (not tested by quartz) includes day 0 also?!?!
+  def _weekDayRange(days: List[Int]) = (0 to 7) map { d => (days contains d) }
 
   def parseMonthlyOneDay = {
     calendars must haveKey("FirstOfMonth")
     calendars("FirstOfMonth") must haveClass[MonthlyCalendar]
     val cal = calendars("FirstOfMonth").asInstanceOf[MonthlyCalendar]
 
-    cal.getDaysExcluded.toList must haveTheSameElementsAs(_dayRange(List(1)))
+    cal.getDaysExcluded.toList must haveTheSameElementsAs(_monthDayRange(List(1)))
   }
 
   def parseMonthlyList = {
-    todo
+    calendars must haveKey("FirstAndLastOfMonth")
+    calendars("FirstAndLastOfMonth") must haveClass[MonthlyCalendar]
+    val cal = calendars("FirstAndLastOfMonth").asInstanceOf[MonthlyCalendar]
+
+    cal.getDaysExcluded.toList must haveTheSameElementsAs(_monthDayRange(List(1, 31)))
   }
+
   def parseWeeklyInt = {
-    todo
+    calendars must haveKey("MondaysSuck")
+    calendars("MondaysSuck") must haveClass[WeeklyCalendar]
+    val cal = calendars("MondaysSuck").asInstanceOf[WeeklyCalendar]
+
+    cal.getDaysExcluded.toList must haveTheSameElementsAs(_weekDayRange(List(2)))
   }
-  def parseWeeklyString = {
-    todo
-  }
+
   def parseCronStyle = {
-    todo
+    calendars must haveKey("CronOnlyBusinessHours")
+    calendars("CronOnlyBusinessHours") must haveClass[CronCalendar]
+    val cal = calendars("CronOnlyBusinessHours").asInstanceOf[CronCalendar]
+
+    // No real external testability of the Cron Calendar provided by quartz; rely on quartz working.
+    cal.getCronExpression must beEqualTo("* * 0-7,18-23 ? * *")
   }
 
   lazy val sampleConfiguration = {
@@ -156,16 +169,10 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
             description = "A thinly veiled example to test monthly exclusions"
             excludeDays = [1, 31]
           }
-          MondaysSuckInt {
+          MondaysSuck {
             type = Weekly
             description = "Everyone, including this calendar, hates mondays as an integer"
             excludeDays = [2]
-            excludeWeekends = false
-          }
-          MondaysSuckString {
-            type = Weekly
-            description = "Everyone, including this calendar, hates mondays as a string name"
-            excludeDays = ["Monday"]
             excludeWeekends = false
           }
           CronOnlyBusinessHours {
