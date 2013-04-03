@@ -152,7 +152,18 @@ object QuartzCalendars {
 
 
   def parseWeeklyCalendar(name: String, config: Config): WeeklyCalendar = new WeeklyCalendar
-  def parseMonthlyCalendar(name: String, config: Config): MonthlyCalendar = new MonthlyCalendar
+  def parseMonthlyCalendar(name: String, config: Config): MonthlyCalendar = {
+    val excludeDays = catchMissing or catchWrongType either { config.getIntList("excludeDays") } match {
+      case Left(t) =>
+        throw new IllegalArgumentException("Invalid or Missing Configuration entry 'excludeDays' for Monthly Calendar. You must provide a list of Integers between 1 and 31.", t)
+      case Right(days) =>
+        days.asScala
+    }
+    val cal = new MonthlyCalendar
+    excludeDays.foreach {  cal.setDayExcluded(_, true) }
+    cal
+  }
+
   def parseCronCalendar(name: String, config: Config): CronCalendar = new CronCalendar("* * 0-7,18-23 ? * *")
 
   def parseCalendar(name: String, config: Config, defaultTimezone: TimeZone): Calendar = {

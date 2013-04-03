@@ -8,7 +8,7 @@ import org.specs2.matcher.ThrownExpectations
 import com.typesafe.config.ConfigFactory
 import akka.actor.ActorSystem
 import java.util.{Calendar, GregorianCalendar, Date, TimeZone}
-import org.quartz.impl.calendar.{DailyCalendar, HolidayCalendar, AnnualCalendar}
+import org.quartz.impl.calendar.{MonthlyCalendar, DailyCalendar, HolidayCalendar, AnnualCalendar}
 
 @RunWith(classOf[JUnitRunner])
 class QuartzCalendarSpec extends Specification with ThrownExpectations { def is =
@@ -21,11 +21,9 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     "Be able to parse and create a Holiday calendar"          ! parseHoliday ^
     "Be able to parse and create a Daily calendar"            ^
         "With a standard entry"                               ! parseDaily ^
-        "Properly adjusting to timezones"                     ! parseDailyVerifyTimezone ^
-        "Preventing 'crossing of daily boundaries' entries"   ! parseDailyVerifyBoundaries ^
                                                             p ^
     "Be able to parse and create a Monthly calendar"          ^
-        "Without a list (single digit)"                       ! parseMonthlyNoList ^
+        "With just one day (a list, but single digit)"        ! parseMonthlyOneDay ^
         "With a list (multiple digits)"                       ! parseMonthlyList ^
                                                             p ^
     "Be able to parse and create a Weekly calendar"           ^
@@ -102,19 +100,16 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     cal.toString must contain("'03:00:00:000 - 05:00:00:000', inverted: false")
   }
 
-  def parseDailyVerifyTimezone = {
-    // shouldn't be needed, as quartz tests this
-    todo
+  def _dayRange(days: List[Int]) = (1 to 31) map { d => (days contains d) }
+
+  def parseMonthlyOneDay = {
+    calendars must haveKey("FirstOfMonth")
+    calendars("FirstOfMonth") must haveClass[MonthlyCalendar]
+    val cal = calendars("FirstOfMonth").asInstanceOf[MonthlyCalendar]
+
+    cal.getDaysExcluded.toList must haveTheSameElementsAs(_dayRange(List(1)))
   }
 
-  def parseDailyVerifyBoundaries = {
-    // shouldn't be needed, as quartz tests this
-    todo
-  }
-
-  def parseMonthlyNoList = {
-    todo
-  }
   def parseMonthlyList = {
     todo
   }
@@ -153,8 +148,8 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
           }
           FirstOfMonth {
             type = Monthly
-            description = "A thinly veiled example to test monthly exclusions and to see if it breaks w/o a list"
-            excludeDays = 1
+            description = "A thinly veiled example to test monthly exclusions of one day"
+            excludeDays = [1]
           }
           FirstAndLastOfMonth {
             type = Monthly
