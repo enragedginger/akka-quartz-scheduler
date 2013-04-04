@@ -51,12 +51,27 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
   initialiseCalendars()
 
+  initialiseSchedules()
+
   /**
    * Parses calendar configurations, creates Calendar instances and attaches them to the scheduler
    */
-  protected def initialiseCalendars() = {
+  protected def initialiseCalendars() {
+    for ((name, calendar) <- QuartzCalendars(config, defaultTimezone)) {
+      log.info("Configuring Calendar '%s'", name)
+      scheduler.addCalendar(name, calendar, true, true)
+    }
+  }
+
+  /**
+   * Parses job and trigger configurations, preparing them for any code request of a matching job.
+   * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
+   * and jobs are basically 'idiot' programs who fire off messages.
+   */
+  protected def initialiseSchedules() {
 
   }
+
 
   lazy protected val threadPool = {
     // todo - wrap one of the Akka thread pools with the Quartz interface?

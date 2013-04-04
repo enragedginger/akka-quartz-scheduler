@@ -1,6 +1,5 @@
 package akka.extension.quartz
 
-import scala.util.control.Exception._
 import com.typesafe.config.{ConfigObject, ConfigException, Config}
 import java.util.TimeZone
 import scala.util.control.Exception._
@@ -206,7 +205,6 @@ object QuartzCalendars {
   }
 
   def parseCalendar(name: String, config: Config, defaultTimezone: TimeZone): Calendar = {
-    println("Parsing Calendar '%s'".format(name))
     // parse common attributes
     val timezone = catchMissing opt {
       TimeZone.getTimeZone(config.getString("timezone")) // todo - this is bad, as Java silently swaps the timezone if it doesn't match...
@@ -217,8 +215,8 @@ object QuartzCalendars {
     }
 
     /// todo - make this whole thing a pattern extractor?
-    catchMissing either { config.getString("type") } match {
-      case Left(_) => throw new IllegalArgumentException("Calendar Type must be defined.")
+    catchMissing either config.getString("type") match {
+      case Left(_) => throw new IllegalArgumentException("Calendar Type must be defined for " + name)
       case Right(typ) =>
         val cal = typ.toUpperCase match {
           case "ANNUAL" => parseAnnualCalendar(name, config)(timezone)
@@ -227,7 +225,8 @@ object QuartzCalendars {
           case "MONTHLY" => parseMonthlyCalendar(name, config)
           case "WEEKLY" => parseWeeklyCalendar(name, config)
           case "CRON" => parseCronCalendar(name, config)
-          case other => throw new IllegalArgumentException("Unknown Quartz Calendar type '%s'. Valid types are Annual, Holiday, Daily, Monthly, Weekly, and Cron.".format(other))
+          case other =>
+              throw new IllegalArgumentException("Unknown Quartz Calendar type '%s' for calendar '%s'. Valid types are Annual, Holiday, Daily, Monthly, Weekly, and Cron.".format(other, name))
         }
         description.foreach{cal.setDescription}
         cal.setTimeZone(timezone)

@@ -133,7 +133,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     val cal = calendars("CronOnlyBusinessHours").asInstanceOf[CronCalendar]
 
     // No real external testability of the Cron Calendar provided by quartz; rely on quartz working.
-    cal.getCronExpression must beEqualTo("* * 0-7,18-23 ? * *")
+    cal.getCronExpression.toString must beEqualTo("* * 0-7,18-23 ? * *")
   }
 
   lazy val sampleConfiguration = {
