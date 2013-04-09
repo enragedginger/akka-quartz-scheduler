@@ -76,7 +76,7 @@ final class SimpleActorMessageJob extends QuartzJob {
 
       val log = Logging(logBus, this)
 
-      log.debug("Triggering job '%s', sending '%s' to '%s'".format(key.getName, msg, receiver))
+      log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
 
       receiver ! msg
     } catch {

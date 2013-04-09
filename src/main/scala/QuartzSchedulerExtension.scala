@@ -25,7 +25,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
 
   // todo - use of the circuit breaker to encapsulate quartz failures?
-  val schedulerName = "QuartzScheduler~".format(system.name)
+  val schedulerName = "QuartzScheduler~%s".format(system.name)
 
   protected val config = system.settings.config.withFallback(defaultConfig).getConfig("akka.quartz").root.toConfig
 
@@ -63,7 +63,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     kv._1.toUpperCase -> kv._2
   }
 
-  log.debug("Configured Schedules: %s", schedules)
+  log.debug("Configured Schedules: {}", schedules)
 
   initialiseCalendars()
 
@@ -77,7 +77,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     case Some(sched) =>
       scheduleJob(name, receiver, msg)(sched)
     case None =>
-      throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'.".format(name))
+      throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
 
   /**
@@ -85,7 +85,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    */
   protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef)(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
-    log.info("Setting up scheduled job '%s', with '%s'".format(name, schedule))
+    log.info("Setting up scheduled job '{}', with '{}'", name, schedule)
     val b = Map.newBuilder[String, AnyRef]
     b += "logBus" -> system.eventStream
     b += "receiver" -> receiver
@@ -100,7 +100,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
     val trigger = schedule.buildTrigger(name)
 
-    log.debug("Created Job '%s' and Trigger '%s', adding to Scheduler.".format(job, trigger))
+    log.debug("Created Job '{}' and Trigger '{}', adding to Scheduler.", job, trigger)
     scheduler.scheduleJob(job, trigger)
   }
 
@@ -110,7 +110,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    */
   protected def initialiseCalendars() {
     for ((name, calendar) <- QuartzCalendars(config, defaultTimezone)) {
-      log.info("Configuring Calendar '%s'", name)
+      log.info("Configuring Calendar '{}'", name)
       // Recast calendar name as upper case to make later lookups easier ( no stupid case clashing at runtime )
       scheduler.addCalendar(name.toUpperCase, calendar, true, true)
     }
@@ -138,7 +138,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
     val scheduler = DirectSchedulerFactory.getInstance().getScheduler(schedulerName)
 
-    log.debug("Initialized a Quartz Scheduler '%s'", scheduler)
+    log.debug("Initialized a Quartz Scheduler '{}'", scheduler)
 
     scheduler
   }
