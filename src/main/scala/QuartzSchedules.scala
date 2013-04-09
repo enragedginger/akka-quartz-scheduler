@@ -142,10 +142,12 @@ sealed trait QuartzSchedule {
    * with the data this schedule contains, given a name
    * Job association can happen separately at schedule time.
    */
-  def buildTrigger(name: String): T = {
+  def buildTrigger(name: String, job: JobDetail): T = {
     @tailrec
     def addCalendars(_t: TriggerBuilder[T], _cals: Seq[String]): TriggerBuilder[T] = {
-      if (_cals.length == 1)
+      if (_cals.length == 0)
+        _t
+      else if (_cals.length == 1)
         _t.modifiedByCalendar(_cals.head)
       else
         addCalendars(_t.modifiedByCalendar(_cals.head), _cals.tail)
@@ -154,6 +156,7 @@ sealed trait QuartzSchedule {
     val tB = TriggerBuilder.newTrigger()
                            .withIdentity(name + "_Trigger")
                            .withDescription(description.getOrElse(null))
+                           .forJob(job)
                            .startNow()
                            .withSchedule(schedule)
 

@@ -11,6 +11,8 @@ resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/release
 libraryDependencies ++= Seq(
     "com.typesafe.akka" % "akka-actor" % "2.0.5",
     "org.quartz-scheduler" % "quartz" % "2.1.7",
+    // test dependencies
+    "com.typesafe.akka" % "akka-testkit" % "2.0.5" % "test",
     "org.specs2" %% "specs2" % "1.12.3" % "test",
     "junit" % "junit" % "4.7" % "test"
 )

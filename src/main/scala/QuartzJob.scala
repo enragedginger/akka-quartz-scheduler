@@ -44,9 +44,37 @@ sealed trait QuartzJob extends Job {
   }
 }
 
-final class SimpleActorMessageJob extends QuartzJob {
+class SimpleActorMessageJob extends Job {
   val jobType = "SimpleActorMessage"
 
+  /**
+   * Fetch an item, cast to a specific type, from the JobDataMap.
+   * I could just use apply, but I want to have a cleaner 'not there' error.
+   *
+   * This does not return Option and flatly explodes upon a key being missing.
+   *
+   * TODO - NotNothing check?
+   **/
+  protected def as[T](key: String)(implicit dataMap: JobDataMap): T = Option(dataMap.get(key)) match {
+    case Some(item) =>
+      // todo - more careful casting check?
+      item.asInstanceOf[T]
+    case None =>
+      throw new NoSuchElementException("No entry in JobDataMap for required entry '%s'".format(key))
+  }
+
+  /**
+   * Fetch an item, cast to a specific type, from the JobDataMap.
+   * I could just use apply, but I want to have a cleaner 'not there' error.
+   *
+   * TODO - NotNothing check?
+   **/
+  protected def getAs[T](key: String)(implicit dataMap: JobDataMap): Option[T] = Option(dataMap.get(key)) match {
+    case Some(item) =>
+      // todo - more careful casting check?
+      Some(item.asInstanceOf[T])
+    case None => None
+  }
   /**
    * These jobs are fundamentally ephemeral - a new Job is created
    * each time we trigger, and passed a context which contains, among
@@ -56,6 +84,7 @@ final class SimpleActorMessageJob extends QuartzJob {
    * @throws JobExecutionException
    */
   def execute(context: JobExecutionContext) {
+    System.err.println("EXECUTING JOB! " + context)
 
     implicit val dataMap = context.getJobDetail.getJobDataMap
 
@@ -83,6 +112,7 @@ final class SimpleActorMessageJob extends QuartzJob {
       // All exceptions thrown from a job, including Runtime, must be wrapped in a JobExcecutionException or Quartz ignores it
       case jee: JobExecutionException => throw jee
       case t: Throwable =>
+        System.err.println("Job ERROR: " + t)
         throw new JobExecutionException("ERROR executing Job '%s': '%s'".format(key.getName, t.getMessage), t) // todo - control refire?
     }
   }

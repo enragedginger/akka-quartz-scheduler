@@ -9,8 +9,9 @@ import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
 import org.quartz.impl.DirectSchedulerFactory
 import java.util.{Date, TimeZone}
 import scala.collection.immutable
-import org.quartz.{Trigger, TriggerBuilder, JobBuilder}
+import org.quartz.{TriggerUtils, Trigger, TriggerBuilder, JobBuilder}
 import org.quartz.core.jmx.JobDataMapSupport
+import org.quartz.impl.triggers.{SimpleTriggerImpl, CronTriggerImpl}
 
 
 object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension]
@@ -25,7 +26,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
 
   // todo - use of the circuit breaker to encapsulate quartz failures?
-  val schedulerName = "QuartzScheduler~%s".format(system.name)
+  def schedulerName = "QuartzScheduler~%s".format(system.name)
 
   protected val config = system.settings.config.withFallback(defaultConfig).getConfig("akka.quartz").root.toConfig
 
@@ -65,6 +66,8 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
   log.debug("Configured Schedules: {}", schedules)
 
+  scheduler.start
+
   initialiseCalendars()
 
 
@@ -93,14 +96,15 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
     val jobData = JobDataMapSupport.newJobDataMap(b.result.asJava)
     val job = JobBuilder.newJob(classOf[SimpleActorMessageJob])
-                        .withIdentity(name + "_Job", system.name /** group by system for now */)
+                        .withIdentity(name + "_Job")
                         .usingJobData(jobData)
                         .withDescription(schedule.description.getOrElse(null))
                         .build()
 
-    val trigger = schedule.buildTrigger(name)
+    log.debug("Building Trigger.")
+    val trigger = schedule.buildTrigger(name, job)
 
-    log.debug("Created Job '{}' and Trigger '{}', adding to Scheduler.", job, trigger)
+    log.debug("Scheduling Job '{}' and Trigger '{}'. Is Scheduler Running? {}", job, trigger, scheduler.isStarted)
     scheduler.scheduleJob(job, trigger)
   }
 

@@ -12,7 +12,7 @@ import org.quartz.impl.calendar._
 
 @RunWith(classOf[JUnitRunner])
 class QuartzCalendarSpec extends Specification with ThrownExpectations { def is =
-
+  sequential ^
   "This is a specification to validate the behavior of the Quartz Calendar configuration modelling"   ^
                                                             p ^
   "The configuration parser should"                           ^
@@ -139,7 +139,6 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
 
   lazy val sampleConfiguration = {
     ConfigFactory.parseString("""
-      akka.quartz {
         calendars {
           WinterClosings {
             type = Annual
@@ -182,7 +181,6 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
             timezone = "America/San_Francisco"
           }
         }
-      }
       """.stripMargin)
   }
 
