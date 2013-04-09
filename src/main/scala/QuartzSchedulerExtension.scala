@@ -33,7 +33,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   lazy val defaultConfig =  ConfigFactory.parseString("""
     akka.quartz {
       threadPool {
-        threadCount = -1
+        threadCount = 1
         threadPriority = 5
         daemonThreads = true
       }
