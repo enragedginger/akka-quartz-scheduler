@@ -7,7 +7,7 @@ import com.typesafe.config.{ConfigFactory, Config}
 
 import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
 import org.quartz.impl.DirectSchedulerFactory
-import java.util.TimeZone
+import java.util.{Date, TimeZone}
 import scala.collection.immutable
 import org.quartz.{Trigger, TriggerBuilder, JobBuilder}
 import org.quartz.core.jmx.JobDataMapSupport
@@ -27,7 +27,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   // todo - use of the circuit breaker to encapsulate quartz failures?
   val schedulerName = "QuartzScheduler~".format(system.name)
 
-  protected val config = system.settings.config.withFallback(defaultConfig)
+  protected val config = system.settings.config.withFallback(defaultConfig).getConfig("akka.quartz").root.toConfig
 
  // For config values that can be omitted by user, to setup a fallback
   lazy val defaultConfig =  ConfigFactory.parseString("""
@@ -42,13 +42,13 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     """.stripMargin)  // todo - boundary checks
 
   // The # of threads in the pool
-  val threadCount = config.getInt("akka.quartz.threadPool.threadCount")
+  val threadCount = config.getInt("threadPool.threadCount")
   // Priority of threads created. Defaults at 5, can be between 1 (lowest) and 10 (highest)
-  val threadPriority = config.getInt("akka.quartz.threadPool.threadPriority")
+  val threadPriority = config.getInt("threadPool.threadPriority")
   require(threadPriority >= 1 && threadPriority <= 10,
           "Quartz Thread Priority (akka.quartz.threadPool.threadPriority) must be a positive integer between 1 (lowest) and 10 (highest).")
   // Should the threads we create be daemonic? FYI Non-daemonic threads could make akka / jvm shutdown difficult
-  val daemonThreads_? = config.getBoolean("akka.quartz.threadPool.daemonThreads")
+  val daemonThreads_? = config.getBoolean("threadPool.daemonThreads")
   // Timezone to use unless specified otherwise
   val defaultTimezone = TimeZone.getTimeZone(config.getString("defaultTimezone"))
 
@@ -70,8 +70,10 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
   /**
    * Schedule a job, whose named configuration must be available
+   *
+   * @return A date, which is what Quartz returns and i'm not sure what it signifies...
    */
-  def schedule(name: String, receiver: ActorRef, msg: AnyRef): Unit = schedules.get(name.toUpperCase) match {
+  def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = schedules.get(name.toUpperCase) match {
     case Some(sched) =>
       scheduleJob(name, receiver, msg)(sched)
     case None =>
@@ -81,7 +83,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   /**
    * Creates the actual jobs for Quartz, and setups the Trigger, etc.
    */
-  protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef)(schedule: QuartzSchedule) = {
+  protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef)(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
     log.info("Setting up scheduled job '%s', with '%s'".format(name, schedule))
     val b = Map.newBuilder[String, AnyRef]

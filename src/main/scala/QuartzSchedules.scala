@@ -51,7 +51,7 @@ object QuartzSchedules {
 
   def apply(config: Config, defaultTimezone: TimeZone): immutable.Map[String, QuartzSchedule] = catchMissing opt {
     /** The extra toMap call is because the asScala gives us a mutable map... */
-    config.getConfig("akka.quartz.schedules").root.asScala.toMap.flatMap {
+    config.getConfig("schedules").root.asScala.toMap.flatMap {
       case (key, value: ConfigObject) =>
         Some(key -> parseSchedule(key, value.toConfig, defaultTimezone))
       case _ =>
