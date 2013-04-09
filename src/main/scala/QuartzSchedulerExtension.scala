@@ -8,6 +8,9 @@ import com.typesafe.config.{ConfigFactory, Config}
 import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
 import org.quartz.impl.DirectSchedulerFactory
 import java.util.TimeZone
+import scala.collection.immutable
+import org.quartz.{Trigger, TriggerBuilder, JobBuilder}
+import org.quartz.core.jmx.JobDataMapSupport
 
 
 object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension]
@@ -49,9 +52,56 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   // Timezone to use unless specified otherwise
   val defaultTimezone = TimeZone.getTimeZone(config.getString("defaultTimezone"))
 
+  /**
+   * Parses job and trigger configurations, preparing them for any code request of a matching job.
+   * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
+   * and jobs are basically 'idiot' programs who fire off messages.
+   *
+   * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
+   */
+  val schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone).map { kv =>
+    kv._1.toUpperCase -> kv._2
+  }
+
+  log.debug("Configured Schedules: %s", schedules)
+
   initialiseCalendars()
 
-  initialiseSchedules()
+
+  /**
+   * Schedule a job, whose named configuration must be available
+   */
+  def schedule(name: String, receiver: ActorRef, msg: AnyRef): Unit = schedules.get(name.toUpperCase) match {
+    case Some(sched) =>
+      scheduleJob(name, receiver, msg)(sched)
+    case None =>
+      throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'.".format(name))
+  }
+
+  /**
+   * Creates the actual jobs for Quartz, and setups the Trigger, etc.
+   */
+  protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef)(schedule: QuartzSchedule) = {
+    import scala.collection.JavaConverters._
+    log.info("Setting up scheduled job '%s', with '%s'".format(name, schedule))
+    val b = Map.newBuilder[String, AnyRef]
+    b += "logBus" -> system.eventStream
+    b += "receiver" -> receiver
+    b += "message" -> msg
+
+    val jobData = JobDataMapSupport.newJobDataMap(b.result.asJava)
+    val job = JobBuilder.newJob(classOf[SimpleActorMessageJob])
+                        .withIdentity(name + "_Job", system.name /** group by system for now */)
+                        .usingJobData(jobData)
+                        .withDescription(schedule.description.getOrElse(null))
+                        .build()
+
+    val trigger = schedule.buildTrigger(name)
+
+    log.debug("Created Job '%s' and Trigger '%s', adding to Scheduler.".format(job, trigger))
+    scheduler.scheduleJob(job, trigger)
+  }
+
 
   /**
    * Parses calendar configurations, creates Calendar instances and attaches them to the scheduler
@@ -59,18 +109,11 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   protected def initialiseCalendars() {
     for ((name, calendar) <- QuartzCalendars(config, defaultTimezone)) {
       log.info("Configuring Calendar '%s'", name)
-      scheduler.addCalendar(name, calendar, true, true)
+      // Recast calendar name as upper case to make later lookups easier ( no stupid case clashing at runtime )
+      scheduler.addCalendar(name.toUpperCase, calendar, true, true)
     }
   }
 
-  /**
-   * Parses job and trigger configurations, preparing them for any code request of a matching job.
-   * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
-   * and jobs are basically 'idiot' programs who fire off messages.
-   */
-  protected def initialiseSchedules() {
-
-  }
 
 
   lazy protected val threadPool = {
@@ -100,11 +143,6 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
 }
 
-object `package` {
-  implicit val quartzExtensionLoggerType: LogSource[QuartzSchedulerExtension] = new LogSource[QuartzSchedulerExtension] {
-    def genString(t: QuartzSchedulerExtension): String = "[" + t.schedulerName + "]"
-  }
-}
 
 
 

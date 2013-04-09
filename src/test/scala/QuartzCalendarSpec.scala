@@ -32,6 +32,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     "Be able to parse and create a Cron calendar"             ! parseCronStyle ^
                                                                 end
 
+
   def parseCalendarList = {
     // tood - more robust check
     calendars must have size(7)
