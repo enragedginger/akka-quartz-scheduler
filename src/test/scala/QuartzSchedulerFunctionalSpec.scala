@@ -8,9 +8,10 @@ import org.junit.runner.RunWith
 import org.specs2.matcher.ThrownExpectations
 import com.typesafe.config.ConfigFactory
 import akka.actor._
-import akka.testkit.{TestProbe, TestKit, ImplicitSender}
+import akka.testkit._
 import akka.util.duration._
 import akka.util.Duration
+import java.util.concurrent.TimeUnit._
 
 /**
  * Separate base trait needed to get the non-default constructor to initialize properly,
@@ -34,7 +35,6 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
                                                       p^
   "The Quartz Scheduling Extension should"             ^
       "Reject a job which is not named in the config"  ! rejectUnconfiguredJob ^
-      "Properly setup & execute a Simple Job"          ! scheduleSimpleJob ^
       "Properly setup & execute a Cron Job"            ! scheduleCronJob   ^
                                                          end
 
@@ -47,36 +47,21 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
     schedule must throwA[IllegalArgumentException]
   }
 
-  def scheduleSimpleJob = {
-    todo
-  /*  val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
-    val probe = TestProbe()
-    receiver ! NewProbe(probe.ref)
-    val jobDt = QuartzSchedulerExtension(_system).schedule("simpleEvery20Seconds", receiver, Tick)
-
-    System.err.println("Job DateTime: " + jobDt)
-
-    val receipt = probe.receiveN(3, Duration(1, "minutes"))
-
-    System.err.println("Receipt: " + receipt)
-
-    receipt must not beNull*/
-
-  }
-
   def scheduleCronJob = {
     val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
     val probe = TestProbe()
     receiver ! NewProbe(probe.ref)
     val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10Seconds", receiver, Tick)
 
-    System.err.println("Job DateTime: " + jobDt)
 
-    val receipt = probe.receiveN(9, Duration(1, "minutes"))
+    /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+    val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
+      case Tock =>
+        Tock
+    }
 
-    System.err.println("Receipt: " + receipt)
 
-    receipt must not beNull
+    receipt must contain(Tock)
   }
 
   case class NewProbe(probe: ActorRef)
@@ -105,24 +90,6 @@ object SchedulingFunctionalTest {
       quartz {
         defaultTimezone = "UTC"
         schedules {
-          simpleEvery20Seconds {
-            type = Simple
-            description = "A simple job that fires every minute"
-            calendars = ["WinterClosings", "FirstOfMonth"]
-            repeat {
-              scale = Seconds
-              interval = 20
-            }
-          }
-          simpleEvery10Seconds10Times {
-            type = Simple
-            description = "A simple job that fires every 10 seconds and stops after 10 times"
-            repeat {
-              scale = Seconds
-              interval = 10
-              repeat = 10
-            }
-          }
           cronEvery30Seconds {
             type = Cron
             description = "A cron job that fires off every 30 seconds"

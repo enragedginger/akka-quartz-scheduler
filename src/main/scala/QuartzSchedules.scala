@@ -12,6 +12,7 @@ import scala.collection.JavaConverters._
 import scala.Some
 import spi.MutableTrigger
 import scala.annotation.tailrec
+import org.quartz.SimpleScheduleBuilder._
 
 /**
  * This is really about triggers - as the "job" is roughly defined in the code that
@@ -77,9 +78,9 @@ object QuartzSchedules {
       case Left(_) => throw new IllegalArgumentException("Schedule Type must be defined for " + name)
       case Right(typ) => typ.toUpperCase match {
         case "CRON" => parseCronSchedule(name, desc, config)(timezone, calendars)
-        case "SIMPLE" => parseSimpleSchedule(name, desc, config)(calendars)
+        case "SIMPLE" => throw new IllegalArgumentException("Simple style schedules are currently disabled. Please use 'Cron' schedules")//parseSimpleSchedule(name, desc, config)(calendars)
         case other =>
-          throw new IllegalArgumentException("Unknown Quartz Schedule type '%s' for calendar '%s'. Valid types are Cron and Simple.".format(other, name))
+          throw new IllegalArgumentException("Unknown Quartz Schedule type '%s' for calendar '%s'. Valid types are: 'Cron'.".format(other, name))
       }
     }
   }
@@ -98,15 +99,14 @@ object QuartzSchedules {
     catchMissing or catchWrongType either { config.getString("repeat.scale") } match {
       case Left(t) =>
         throw new IllegalArgumentException("Invalid or Missing Configuration entry 'repeat.scale' for Simple Schedule '%s'".format(name) +
-                                           " – You must provide a scale of either Hours, Minutes, Seconds, or Milliseconds.", t)
+                                           " – You must provide a scale of either Hours, Minutes, or Seconds.", t)
       case Right(scale) => scale.toUpperCase match {
         case "HOURS" => new QuartzSimpleHourlySchedule(name, desc, interval, repeat, calendars)
         case "MINUTES" => new QuartzSimpleMinutelySchedule(name, desc, interval, repeat, calendars)
         case "SECONDS" => new QuartzSimpleSecondlySchedule(name, desc, interval, repeat, calendars)
-        case "MILLISECONDS" => new QuartzSimpleMillisecondlySchedule(name, desc, interval, repeat, calendars)
         case other =>
           throw new IllegalArgumentException("Invalid 'repeat.scale' type for Simple Schedule '%s'".format(name) +
-                                             " – Valid scales are Hours, Minutes, Seconds, Milliseconds.")
+                                             " – Valid scales are Hours, Minutes, or Seconds.")
       }
     }
   }
@@ -190,10 +190,7 @@ sealed abstract class QuartzSimpleSchedule extends QuartzSchedule {
    */
   def repeat: Option[Int]
 
-  protected def _build: SimpleScheduleBuilder = repeat match {
-    case Some(count) => SimpleScheduleBuilder.simpleSchedule.withRepeatCount(count)
-    case None =>  SimpleScheduleBuilder.simpleSchedule.repeatForever
-  }
+
 }
 
 final class QuartzSimpleHourlySchedule(val name: String,
@@ -201,8 +198,12 @@ final class QuartzSimpleHourlySchedule(val name: String,
                                        val interval: Int,
                                        val repeat: Option[Int],
                                        val calendars: Seq[String]) extends QuartzSimpleSchedule {
+
   // Do *NOT* build, we need the uncompleted builder. I hate the Quartz API, truly.
-  val schedule = _build.withIntervalInHours(interval)
+  val schedule = repeat match {
+    case Some(count) => repeatHourlyForTotalCount(count, interval)
+    case None =>  repeatHourlyForever(interval)
+  }
 }
 
 final class QuartzSimpleMinutelySchedule(val name: String,
@@ -211,7 +212,10 @@ final class QuartzSimpleMinutelySchedule(val name: String,
                                          val repeat: Option[Int],
                                          val calendars: Seq[String]) extends QuartzSimpleSchedule {
   // Do *NOT* build, we need the uncompleted builder. I hate the Quartz API, truly.
-  val schedule = _build.withIntervalInMinutes(interval)
+  val schedule = repeat match {
+    case Some(count) => repeatMinutelyForTotalCount(count, interval)
+    case None =>  repeatMinutelyForever(interval)
+  }
 }
 
 final class QuartzSimpleSecondlySchedule(val name: String,
@@ -220,15 +224,9 @@ final class QuartzSimpleSecondlySchedule(val name: String,
                                          val repeat: Option[Int],
                                          val calendars: Seq[String]) extends QuartzSimpleSchedule {
   // Do *NOT* build, we need the uncompleted builder. I hate the Quartz API, truly.
-  val schedule = _build.withIntervalInSeconds(interval)
+  val schedule = repeat match {
+    case Some(count) => repeatSecondlyForTotalCount(count, interval)
+    case None =>  repeatSecondlyForever(interval)
+  }
 }
 
-final class QuartzSimpleMillisecondlySchedule(val name: String,
-                                              val description: Option[String],
-                                              val interval: Int,
-                                              val repeat: Option[Int],
-                                              val calendars: Seq[String]) extends QuartzSimpleSchedule {
-
-  // Do *NOT* build, we need the uncompleted builder. I hate the Quartz API, truly.
-  val schedule = _build.withIntervalInMilliseconds(interval)
-}

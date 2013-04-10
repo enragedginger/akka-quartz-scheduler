@@ -84,7 +84,6 @@ class SimpleActorMessageJob extends Job {
    * @throws JobExecutionException
    */
   def execute(context: JobExecutionContext) {
-    System.err.println("EXECUTING JOB! " + context)
 
     implicit val dataMap = context.getJobDetail.getJobDataMap
 
@@ -112,7 +111,6 @@ class SimpleActorMessageJob extends Job {
       // All exceptions thrown from a job, including Runtime, must be wrapped in a JobExcecutionException or Quartz ignores it
       case jee: JobExecutionException => throw jee
       case t: Throwable =>
-        System.err.println("Job ERROR: " + t)
         throw new JobExecutionException("ERROR executing Job '%s': '%s'".format(key.getName, t.getMessage), t) // todo - control refire?
     }
   }
