@@ -102,7 +102,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
                         .build()
 
     log.debug("Building Trigger.")
-    val trigger = schedule.buildTrigger(name, job)
+    val trigger = schedule.buildTrigger(name)
 
     log.debug("Scheduling Job '{}' and Trigger '{}'. Is Scheduler Running? {}", job, trigger, scheduler.isStarted)
     scheduler.scheduleJob(job, trigger)
