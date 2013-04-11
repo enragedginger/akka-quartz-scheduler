@@ -61,7 +61,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
     }
 
 
-    receipt must contain(Tock)
+    receipt must contain(Tock) and have size(5)
   }
 
   case class NewProbe(probe: ActorRef)
@@ -86,7 +86,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 object SchedulingFunctionalTest {
     lazy val sampleConfiguration = { ConfigFactory.parseString("""
     akka {
-      loglevel = "DEBUG"
+      loglevel = "INFO"
       quartz {
         defaultTimezone = "UTC"
         schedules {
