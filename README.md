@@ -40,12 +40,10 @@ Evolving, subject to change, and not curently for public consumption.
 
 3. What about that other `akka-quartz` component up on GitHub?
 
-    After evaluation, the feeling was that it structurally was not sound. The interface to this aforementioned
-    component is via Actors - one creates an instance of an Actor that has its own Quartz Scheduler underneath it,
-    and sends messages to that Actor to schedule jobs.
-
-    Because it is an Actor that provides no "Singleton"-like guarantee, it becomes too easy for users to accidentally
-    spin up multiple scheduler instances, each of which is backed by its  own threadpool.
+    The interface to this aforementioned `akka-quartz` component is via Actors - one creates an instance of an Actor that 
+    has its own Quartz Scheduler underneath it, and sends messages to that Actor to schedule jobs. Because it is an Actor
+    which provides no "Singleton"-like guarantee, it becomes too easy for users to accidentally spin up multiple scheduler
+    instances, each of which is backed by its  own threadpool.
     Instead, with `akka-quartz-scheduler` we use Akka's Extension system which provides
     a plugin model – we guarantee only one Quartz Scheduler is *ever* spun up per `ActorSystem`. This means
     we will never create anything but one single Thread Pool which you have control over the size of, for
