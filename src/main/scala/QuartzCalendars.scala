@@ -27,8 +27,7 @@ object QuartzCalendars {
    *   i.e. you can specify "christmas" (always december 25) and it will get every christmas,
    *   but not "Easter" (which is calculated based on the first full moon on or after the spring equinox)
    */
-  // excludeDates (list of ISO-8601 dates, Year can be set to anything as YYYY-MM-DD
-  //               or MM-DD will fill in a default )
+  // excludeDates (list of MM-DD dates)
 
   /* holiday
    *  excludes full specified day, with the year taken into account
@@ -75,7 +74,6 @@ object QuartzCalendars {
   val catchMissing = catching(classOf[ConfigException.Missing])
   val catchWrongType = catching(classOf[ConfigException.WrongType])
   val catchParseErr = catching(classOf[ParseException])
-  val dateFmt = new SimpleDateFormat("yyyy-MM-dd")
 
   def apply(config: Config, defaultTimezone: TimeZone): immutable.Map[String, Calendar] = catchMissing opt {
     /** the extra toMap call is because the asScala gives us a mutable map... */
@@ -95,6 +93,7 @@ object QuartzCalendars {
   }
 
   def parseAnnualCalendar(name: String, config: Config)(tz: TimeZone): AnnualCalendar = {
+    val dateFmt = new SimpleDateFormat("MM-dd")
     val excludeDates = catchMissing or catchWrongType either { config.getStringList("excludeDates") } match {
       case Left(t) =>
         throw new IllegalArgumentException("Invalid or Missing Configuration entry 'excludeDates' for Annual calendar '%s'. You must provide a list of ISO-8601 compliant dates ('YYYY-MM-DD').".format(name), t)
@@ -114,6 +113,7 @@ object QuartzCalendars {
   }
 
   def parseHolidayCalendar(name: String, config: Config)(tz: TimeZone): HolidayCalendar = {
+    val dateFmt = new SimpleDateFormat("yyyy-MM-dd")
     val excludeDates = catchMissing or catchWrongType either { config.getStringList("excludeDates") } match {
       case Left(t) =>
         throw new IllegalArgumentException("Invalid or Missing Configuration entry 'excludeDates' for Holiday Calendar '%s'. You must provide a list of ISO-8601 compliant dates ('YYYY-MM-DD').".format(name), t)

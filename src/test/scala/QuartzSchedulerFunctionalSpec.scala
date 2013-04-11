@@ -103,7 +103,7 @@ object SchedulingFunctionalTest {
           WinterClosings {
             type = Annual
             description = "Major holiday dates that occur in the winter time every year, non-moveable (The year doesn't matter)"
-            excludeDates = ["2000-12-25", "2000-01-01"]
+            excludeDates = ["12-25", "01-01"]
           }
           Easter {
             type = Holiday
