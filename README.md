@@ -34,10 +34,10 @@ Evolving, subject to change, and not curently for public consumption.
 
 2. Why not just use the Quartz component in Akka's Camel Extension?
 
-    1. To begin with, Akka's Camel extension was *not* available in Akka 2.0.x, only in 2.1+
-    2. Camel brings with it a whole architecture change (`Consumers`, `Producers`, etc) and is not exactly
+    * To begin with, Akka's Camel extension was *not* available in Akka 2.0.x, only in 2.1+
+    * Camel brings with it a whole architecture change (`Consumers`, `Producers`, etc) and is not exactly
        "lightweight" to plug in, if all you want is Quartz support
-    3. We wanted to bring the scheduling concept of Quartz into Akka as cleanly as possible with
+    * We wanted to bring the scheduling concept of Quartz into Akka as cleanly as possible with
        native configuration integration and a lightweight feel
 
 3. What about that other `akka-quartz` component up on GitHub?
