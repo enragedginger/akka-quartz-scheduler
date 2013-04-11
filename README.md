@@ -70,6 +70,59 @@ change of that sort is fixable without Operations needing to require a recompila
 - investigate supporting listeners, with actor hookarounds.
 - misfires and recovery model - play nice with supervision, deathwatch, etc
   [docs page 23 - very close to supervision strategy]
+- allow specification of delayed start time
+- permit cancellation, suspension and status checks of schedules
 
+## Usage
+
+Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
+
+        <PENDING>
+
+Then, from within your Akka project you can create and access a Scheduler:
+
+    ```scala
+    val scheduler = QuartzSchedulerExtension(_system)
+
+    ```
+
+Where `_system` represents an instance of an Akka `ActorSystem` – note that `QuartzSchedulerExtension` is scoped
+to that `ActorSystem` and there will only ever be one instance of it per `ActorSystem`.
+
+There is only one external method on the `scheduler` instance, which is `schedule`:
+
+    ```scala
+    def schedule(name: String, receiver: ActorRef, msg: AnyRef): java.util.Date
+    ```
+
+The arguments to schedule are:
+
+- name: A `String` identifying the name of this schedule. This *must* match a schedule present in the configuration
+- receiver: An `ActorRef`, who will be sent `msg` each time the schedule fires
+- msg: An `AnyRef`, representing a message instance which will be sent to `receiver` each time the schedule fires
+
+Invoking `schedule` returns an instance of `java.util.Date`, representing the first time the newly setup schedule
+will fire.
+
+Each time the Quartz schedule trigger fires, Quartz will send a copy of `msg` to your `receiver` actor.
+
+The details on the configuration of a job is outlined below in the section `Schedule Configuration`.
+
+### Configuration of Quartz Scheduler
+
+All configuration of `akka-quartz-scheduler` is done inside of the akka configuration file in an `akka.quartz` config
+block. At the top level of the configuration, optional values may be set which override the defaults for:
+
+- defaultTimezone - **[String]** must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String)),
+representing the timezone to configure all jobs to run in. *DEFAULTS TO "UTC"*
+- threadPool.threadCount - **[Int]** The number of threads to allocate to the internal Quartz threadpool. *DEFAULTS TO **1*** - you may wish to up this number if you have a large number of schedules
+being executed. With only 1 thread, each trigger will queue up and you may not get responsive schedule notifications.
+- threadPool.threadPriority - **[Int]** A number, between 1 (Lowest priority) and 10 (Highest priority), specifying the priority to assign to Quartz' threads *DEFAULTS TO **5***
+- threadPool.daemonThreads - **[Boolean]** A boolean indicating whether the threads Quartz creates should execute as [Daemon Threads](http://stackoverflow.com/a/2213348) or not. *DEFAULTS TO **TRUE***
+
+There are two 'primary' sub-blocks of the `akka.quartz` configuration, which are `schedules` and `calendars`.
+
+#### Schedule Configuration
+#### Calendar Configuration
 
 

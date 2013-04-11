@@ -74,7 +74,10 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   /**
    * Schedule a job, whose named configuration must be available
    *
-   * @return A date, which is what Quartz returns and i'm not sure what it signifies...
+   * @param name A String identifying the job, which must match configuration
+   * @param receiver An ActorRef, who will be notified each time the schedule fires
+   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
+   * @return A date, which indicates the first time the trigger will fire.
    */
   def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = schedules.get(name.toUpperCase) match {
     case Some(sched) =>
@@ -85,6 +88,8 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
   /**
    * Creates the actual jobs for Quartz, and setups the Trigger, etc.
+   *
+   * @return A date, which indicates the first time the trigger will fire.
    */
   protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef)(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
