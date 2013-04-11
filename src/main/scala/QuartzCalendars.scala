@@ -17,7 +17,7 @@ import collection.immutable
 object QuartzCalendars {
   // TODO - Support a default / "Base" calendar.
   // type (of enum list)
-  // timezone (parseable) [optional, defaults to UTC] TODO: Default Timezone at toplevel
+  // timezone (parseable) [optional, defaults to UTC]
   // description (string)
 
   /* annual

@@ -101,13 +101,11 @@ class QuartzScheduleSpec extends Specification with ThrownExpectations { def is 
     ConfigFactory.parseString("""
       schedules {
         cronEvery30Seconds {
-          type = Cron
           description = "A cron job that fires off every 30 seconds"
           expression = "*/30 * * ? * *"
           calendars = ["CronOnlyBusinessHours"]
         }
         cronEvery10Seconds {
-          type = Cron
           description = "A cron job that fires off every 10 seconds"
           expression = "*/10 * * ? * *"
         }
