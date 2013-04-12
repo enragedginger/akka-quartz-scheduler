@@ -29,14 +29,14 @@ Evolving, subject to change, and not curently for public consumption.
     The Akka Scheduler is designed to setup events that happen based on durations from the current moment:
     You can say "fire this job in 15 minutes, every 30 minutes thereafter" but not "fire a job every day at 3pm".
 
-    Further, Akka's default scheduler also is executed around a HashedWheelTimer – a potential precision loss for jobs,
-    as it does not provide strong guarantees on the timeliness of execution.
+    Further, Akka's default scheduler also is executed around a [`HashedWheelTimer`](http://docs.jboss.org/netty/3.1/api/org/jboss/netty/util/HashedWheelTimer.html) –
+    a potential precision loss for jobs, as it does not provide strong guarantees on the timeliness of execution.
 
-2. Why not just use the Quartz component in Akka's Camel Extension?
+2. Why not just use the Quartz component in [Akka's Camel Extension](http://doc.akka.io/docs/akka/2.1.2/scala/camel.html)?
 
-  1. To begin with, Akka's Camel extension was *not* available in Akka 2.0.x, only in 2.1+
-  2. Camel brings with it a whole architecture change (`Consumers`, `Producers`, etc) and is not exactly "lightweight" to plug in, if all you want is Quartz support
-  3. We wanted to bring the scheduling concept of Quartz into Akka as cleanly as possible with native configuration integration and a lightweight feel
+    1. To begin with, Akka's Camel extension was *not* available in Akka 2.0.x, only in 2.1+
+    2. Camel brings with it a whole architecture change (`Consumers`, `Producers`, etc) and is not exactly "lightweight" to plug in, if all you want is Quartz support
+    3. We wanted to bring the scheduling concept of Quartz into Akka as cleanly as possible with native configuration integration and a lightweight feel
 
 3. What about that other `akka-quartz` component up on GitHub?
 
@@ -104,13 +104,26 @@ will fire.
 
 Each time the Quartz schedule trigger fires, Quartz will send a copy of `msg` to your `receiver` actor.
 
-The details on the configuration of a job is outlined below in the section `Schedule Configuration`.
+Here is an example, using a schedule called `Every30Seconds`, which sends a `Tick` message to a `CleanupActor` (which does hand wavy cleanup things):
+
+    ```scala
+    case object Tick
+
+    val cleaner = _system.actorOf(Props[CleanupActor])
+
+    QuartzSchedulerExtension(_system).schedule("Every30Seconds", cleaner, Tick)
+    ```
+
+Where the `Tick` message is handled normally inside the Actor's message loop. If one wanted to ensure that schedule
+messages were dealt with more immediately than "normal" actor messages, they could utilize [Priority Mailboxes](http://doc.akka.io/docs/akka/2.0.5/scala/dispatchers.html).
+
+The details on the configuration of a job is outlined below in the section '*Schedule Configuration*'.
 
 ### Configuration of Quartz Scheduler
 
 All configuration of `akka-quartz-scheduler` is done inside of the akka configuration file in an `akka.quartz` config
 block. Like Akka's configuration file, this follows the [HOCON Configuration Format](https://github.com/typesafehub/config/blob/master/HOCON.md).
-Any keys specified as `foo.bar.baz = x` can also be expressed as `foo { bar { baz = x } }`.
+Thus, any entries specified as `foo.bar.baz = x` can also be expressed as `foo { bar { baz = x } }`.
 
 At the top level of the configuration, optional values may be set which override the defaults for:
 
@@ -135,8 +148,8 @@ The schedule name in the configuration will be used to match it up with a reques
 case does not matter as the "Is there a matching job?" configuration lookup is case insensitive.
 
 The configuration block for schedules is in `akka.quartz.schedules`, with sub-entries being specified inside of a named
-block, such that the configuration for a schedule named '3AMCleanup' would have it's configuration values specified inside
-the configuration block `akka.quartz.schedules.3AMCleanup`.
+block, such that the configuration for a schedule named `Every30Seconds` would have it's configuration values specified inside
+the configuration block `akka.quartz.schedules.Every30Seconds`.
 
 The entries that can be placed inside of a schedule configuration are:
 
@@ -153,6 +166,21 @@ to this schedule as "exemptions" (Any times/dates falling in the Calendar will b
 a Calendar that excludes all Mondays would keep a schedule configured to trigger every hour, from triggering *at all* on Mondays.
 *DEFAULTS TO **Seq.empty[String]***
 
+An example schedule called `Every30Seconds` which, aptly, fires off every 30 seconds:
+
+      ```
+      akka {
+        schedules {
+          Every30Seconds {
+            description = "A cron job that fires off every 30 seconds"
+            expression = "*/30 * * ? * *"
+            calendars = ["OnlyBusinessHours"]
+          }
+        }
+      }
+      ```
+This Schedule specifies a Cron Expression which executes every 30 seconds of every day, but is modified by the calendar
+"OnlyBusinessHours", which excludes triggers from firing outside of between 8am and 6pm (and is detailed below).
+
+
 #### Calendar Configuration
-
-
