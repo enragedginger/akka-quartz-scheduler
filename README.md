@@ -95,9 +95,9 @@ There is only one external method on the `scheduler` instance, which is `schedul
 
 The arguments to schedule are:
 
-- name: A `String` identifying the name of this schedule. This *must* match a schedule present in the configuration
-- receiver: An `ActorRef`, who will be sent `msg` each time the schedule fires
-- msg: An `AnyRef`, representing a message instance which will be sent to `receiver` each time the schedule fires
+- `name`: A `String` identifying the name of this schedule. This *must* match a schedule present in the configuration
+- `receiver`: An `ActorRef`, who will be sent `msg` each time the schedule fires
+- `msg`: An `AnyRef`, representing a message instance which will be sent to `receiver` each time the schedule fires
 
 Invoking `schedule` returns an instance of `java.util.Date`, representing the first time the newly setup schedule
 will fire.
@@ -109,18 +109,50 @@ The details on the configuration of a job is outlined below in the section `Sche
 ### Configuration of Quartz Scheduler
 
 All configuration of `akka-quartz-scheduler` is done inside of the akka configuration file in an `akka.quartz` config
-block. At the top level of the configuration, optional values may be set which override the defaults for:
+block. Like Akka's configuration file, this follows the [HOCON Configuration Format](https://github.com/typesafehub/config/blob/master/HOCON.md).
+Any keys specified as `foo.bar.baz = x` can also be expressed as `foo { bar { baz = x } }`.
 
-- defaultTimezone - **[String]** must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String)),
-representing the timezone to configure all jobs to run in. *DEFAULTS TO "UTC"*
-- threadPool.threadCount - **[Int]** The number of threads to allocate to the internal Quartz threadpool. *DEFAULTS TO **1*** - you may wish to up this number if you have a large number of schedules
+At the top level of the configuration, optional values may be set which override the defaults for:
+
+- `defaultTimezone` - **[String]** represents the timezone to configure all jobs to run in. *DEFAULTS TO **UTC***
+must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String)),
+- `threadPool.threadCount` - **[Int]** The number of threads to allocate to the internal Quartz threadpool. *DEFAULTS TO **1*** - you may wish to up this number if you have a large number of schedules
 being executed. With only 1 thread, each trigger will queue up and you may not get responsive schedule notifications.
-- threadPool.threadPriority - **[Int]** A number, between 1 (Lowest priority) and 10 (Highest priority), specifying the priority to assign to Quartz' threads *DEFAULTS TO **5***
-- threadPool.daemonThreads - **[Boolean]** A boolean indicating whether the threads Quartz creates should execute as [Daemon Threads](http://stackoverflow.com/a/2213348) or not. *DEFAULTS TO **TRUE***
+- `threadPool.threadPriority` - **[Int]** A number, between 1 (Lowest priority) and 10 (Highest priority), specifying the priority to assign to Quartz' threads *DEFAULTS TO **5***
+- `threadPool.daemonThreads` - **[Boolean]** A boolean indicating whether the threads Quartz creates should execute as [Daemon Threads](http://stackoverflow.com/a/2213348) or not. *DEFAULTS TO **TRUE***
 
 There are two 'primary' sub-blocks of the `akka.quartz` configuration, which are `schedules` and `calendars`.
 
 #### Schedule Configuration
+
+Schedules are our abstraction over Quartz' Job & Trigger concepts. They allow you to define a named schedule,
+which will fire a schedule event (sending a message to an actor, as specified in code) each time the Quartz trigger fires.
+
+Currently, you can only specify "Cron" schedules, which follow [Quartz' CronExpression Language](http://quartz-scheduler.org/api/2.1.0/org/quartz/CronExpression.html),
+which is designed to match the standard Unix cron syntax with a few nice additions.
+
+The schedule name in the configuration will be used to match it up with a requested job when `schedule` is invoked;
+case does not matter as the "Is there a matching job?" configuration lookup is case insensitive.
+
+The configuration block for schedules is in `akka.quartz.schedules`, with sub-entries being specified inside of a named
+block, such that the configuration for a schedule named '3AMCleanup' would have it's configuration values specified inside
+the configuration block `akka.quartz.schedules.3AMCleanup`.
+
+The entries that can be placed inside of a schedule configuration are:
+
+- `expression` - **[String]** *[required]* a valid [Quartz' CronExpression](http://quartz-scheduler.org/api/2.1.0/org/quartz/CronExpression.html),
+which describes when this job should trigger. e.g. `expression = "*/30 * * ? * *"` would fire every 30 seconds, on every date (however,
+the firing schedule created by this expression is modified by the `calendars` variable, defined below)
+- `timezone` - **[String]** *[optional]*  the timezone in which to execute the schedule, *DEFAULTS TO `akka.quartz.defaultTimezone`, WHICH DEFAULTS TO **UTC***
+must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String))
+- `description` - **[String]** *[optional]* a description of the job. *DEFAULTS TO **null**. Mostly for human friendliness
+when they read your configuration aka "what this schedule is for", but set in Quartz as well for if you dump the scheduler contents
+for debug.
+- `calendars` - **[List[String]]** *[optional]* A HOCON List of Strings, which are names of configured Calendars (see below), which are applied
+to this schedule as "exemptions" (Any times/dates falling in the Calendar will be excluded from the schedule firing - i.e.
+a Calendar that excludes all Mondays would keep a schedule configured to trigger every hour, from triggering *at all* on Mondays.
+*DEFAULTS TO **Seq.empty[String]***
+
 #### Calendar Configuration
 
 
