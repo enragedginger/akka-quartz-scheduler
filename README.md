@@ -79,19 +79,19 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 
 Then, from within your Akka project you can create and access a Scheduler:
 
-    ```scala
-    val scheduler = QuartzSchedulerExtension(_system)
+```scala
+val scheduler = QuartzSchedulerExtension(_system)
 
-    ```
+```
 
 Where `_system` represents an instance of an Akka `ActorSystem` – note that `QuartzSchedulerExtension` is scoped
 to that `ActorSystem` and there will only ever be one instance of it per `ActorSystem`.
 
 There is only one external method on the `scheduler` instance, which is `schedule`:
 
-    ```scala
-    def schedule(name: String, receiver: ActorRef, msg: AnyRef): java.util.Date
-    ```
+```scala
+def schedule(name: String, receiver: ActorRef, msg: AnyRef): java.util.Date
+```
 
 The arguments to schedule are:
 
@@ -106,13 +106,13 @@ Each time the Quartz schedule trigger fires, Quartz will send a copy of `msg` to
 
 Here is an example, using a schedule called `Every30Seconds`, which sends a `Tick` message to a `CleanupActor` (which does hand wavy cleanup things):
 
-    ```scala
-    case object Tick
+```scala
+case object Tick
 
-    val cleaner = _system.actorOf(Props[CleanupActor])
+val cleaner = _system.actorOf(Props[CleanupActor])
 
-    QuartzSchedulerExtension(_system).schedule("Every30Seconds", cleaner, Tick)
-    ```
+QuartzSchedulerExtension(_system).schedule("Every30Seconds", cleaner, Tick)
+```
 
 Where the `Tick` message is handled normally inside the Actor's message loop. If one wanted to ensure that schedule
 messages were dealt with more immediately than "normal" actor messages, they could utilize [Priority Mailboxes](http://doc.akka.io/docs/akka/2.0.5/scala/dispatchers.html).
@@ -168,17 +168,17 @@ a Calendar that excludes all Mondays would keep a schedule configured to trigger
 
 An example schedule called `Every30Seconds` which, aptly, fires off every 30 seconds:
 
-      ```
-      akka {
-        schedules {
-          Every30Seconds {
-            description = "A cron job that fires off every 30 seconds"
-            expression = "*/30 * * ? * *"
-            calendars = ["OnlyBusinessHours"]
-          }
-        }
-      }
-      ```
+```
+akka {
+  schedules {
+    Every30Seconds {
+      description = "A cron job that fires off every 30 seconds"
+      expression = "*/30 * * ? * *"
+      calendars = ["OnlyBusinessHours"]
+    }
+  }
+}
+```
 This Schedule specifies a Cron Expression which executes every 30 seconds of every day, but is modified by the calendar
 "OnlyBusinessHours", which excludes triggers from firing outside of between 8am and 6pm (and is detailed below).
 
