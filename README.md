@@ -127,12 +127,12 @@ Thus, any entries specified as `foo.bar.baz = x` can also be expressed as `foo {
 
 At the top level of the configuration, optional values may be set which override the defaults for:
 
-- `defaultTimezone` - **[String]** represents the timezone to configure all jobs to run in. *DEFAULTS TO **UTC***
+- `defaultTimezone` - **[String]** represents the timezone to configure all jobs to run in. *DEFAULTS TO UTC*
 must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String)),
-- `threadPool.threadCount` - **[Int]** The number of threads to allocate to the internal Quartz threadpool. *DEFAULTS TO **1*** - you may wish to up this number if you have a large number of schedules
+- `threadPool.threadCount` - **[Int]** The number of threads to allocate to the internal Quartz threadpool. *DEFAULTS TO 1* - you may wish to up this number if you have a large number of schedules
 being executed. With only 1 thread, each trigger will queue up and you may not get responsive schedule notifications.
-- `threadPool.threadPriority` - **[Int]** A number, between 1 (Lowest priority) and 10 (Highest priority), specifying the priority to assign to Quartz' threads *DEFAULTS TO **5***
-- `threadPool.daemonThreads` - **[Boolean]** A boolean indicating whether the threads Quartz creates should execute as [Daemon Threads](http://stackoverflow.com/a/2213348) or not. *DEFAULTS TO **TRUE***
+- `threadPool.threadPriority` - **[Int]** A number, between 1 (Lowest priority) and 10 (Highest priority), specifying the priority to assign to Quartz' threads *DEFAULTS TO 5*
+- `threadPool.daemonThreads` - **[Boolean]** A boolean indicating whether the threads Quartz creates should execute as [Daemon Threads](http://stackoverflow.com/a/2213348) or not. *DEFAULTS TO TRUE*
 
 There are two 'primary' sub-blocks of the `akka.quartz` configuration, which are `schedules` and `calendars`.
 
@@ -158,7 +158,7 @@ which describes when this job should trigger. e.g. `expression = "*/30 * * ? * *
 the firing schedule created by this expression is modified by the `calendars` variable, defined below)
 - `timezone` - **[String]** *[optional]*  the timezone in which to execute the schedule, *DEFAULTS TO `akka.quartz.defaultTimezone`, WHICH DEFAULTS TO **UTC***
 must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String))
-- `description` - **[String]** *[optional]* a description of the job. *DEFAULTS TO **null**. Mostly for human friendliness
+- `description` - **[String]** *[optional]* a description of the job. *DEFAULTS TO null*. Mostly for human friendliness
 when they read your configuration aka "what this schedule is for", but set in Quartz as well for if you dump the scheduler contents
 for debug.
 - `calendars` - **[List[String]]** *[optional]* A HOCON List of Strings, which are names of configured Calendars (see below), which are applied
