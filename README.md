@@ -172,11 +172,13 @@ An example schedule called `Every30Seconds` which, aptly, fires off every 30 sec
 
 ```
 akka {
-  schedules {
-    Every30Seconds {
-      description = "A cron job that fires off every 30 seconds"
-      expression = "*/30 * * ? * *"
-      calendars = ["OnlyBusinessHours"]
+  quartz {
+    schedules {
+      Every30Seconds {
+        description = "A cron job that fires off every 30 seconds"
+        expression = "*/30 * * ? * *"
+        calendars = ["OnlyBusinessHours"]
+      }
     }
   }
 }
@@ -186,3 +188,143 @@ This Schedule specifies a Cron Expression which executes every 30 seconds of eve
 
 
 #### Calendar Configuration
+
+Calendars in the `akka-quartz-scheduler` mirror the concept of [Quartz' Calendars](http://quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-04) –
+most specifically, they allow you to specify *exclusions* that override a schedule.
+
+Calendars are configured globally, in the `akka.quartz.calendars` configuration block. The definition of a calendar and what it excludes
+is made within this block. By default, no Calendars are applied to a Schedule. Instead, you must reference a named Calendar
+inside the `calendars` array of a Schedule's configuration, as outlined above.
+
+The configuration block for calendars is in `akka.quartz.calendars`, with sub-entries being specified inside of a named
+block, such that the configuration for a calendar named `OnlyBusinessHours` would have it's configuration values specified inside
+the configuration block `akka.quartz.calendars.OnlyBusinessHours`.
+
+There are several types of Calendar, each with its own specific configurations. The configuration values which are common to *all* types of Calendar are:
+
+- `type` - **[String]** *[required]* a valid type of Calendar. Currently either: Annual, Holiday, Daily, Monthly, Weekly, and Cron
+- `timezone` - **[String]** *[optional]*  the timezone in which to execute the calendar, *DEFAULTS TO `akka.quartz.defaultTimezone`, WHICH DEFAULTS TO **UTC***
+must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String))
+- `description` - **[String]** *[optional]* a description of the calendar. *DEFAULTS TO null*. Mostly for human friendliness
+when they read your configuration aka "what this calendar is for", but set in Quartz as well for if you dump the scheduler contents
+for debug.
+
+Each specific Calendar type and its particular configuration entries are...
+
+#####  'Annual' Calendar
+An annual calendar excludes specific days of a given year, e.g. bank holidays which fall on the same date every year (Christmas and Gregorian New Year's for example)
+This calendar *does not take year into account*, and will apply to all years.
+
+It has only one configuration entry:
+
+- `excludeDates` - **[Seq[String]]** *[required]* This is a list of strings which are dates in the MM-DD format, representing which dates to exclude.
+ For example, "Exclude Christmas and New Years" would read as `excludeDates = ["12-25", "01-01"]`
+
+An example:
+
+```
+WinterClosings {
+  type = Annual
+  description = "Major holiday dates that occur in the winter time every year, non-moveable (The year doesn't matter)"
+  excludeDates = ["12-25", "01-01"]
+}
+```
+
+##### 'Holiday' Calendar
+A holiday calendar excludes specific dates, with a fully month, day, year taken into account. It is mostly useful for
+moving Bank Holidays (e.g. President's Day) and Moveable Feasts (e.g. Easter, which is based on a Lunar calendar).
+
+It has only one configuration entry:
+
+- `excludeDates` - **[Seq[String]]** *[required]* This is a list of strings in the ISO-8601 date format (YYYY-MM-DD), representing which dates
+(with year taken into account) to exclude. For example, excluding the the next 5 years' Easter holidays would read as `excludeDates = ["2013-03-31", "2014-04-20", "2015-04-05", "2016-03-27", "2017-04-16"]`
+
+An example:
+
+```
+Easter {
+  type = Holiday
+  description = "The easter holiday (a moveable feast) for the next five years"
+  excludeDates = ["2013-03-31", "2014-04-20", "2015-04-05", "2016-03-27", "2017-04-16"]
+}
+```
+
+##### 'Daily' Calendar
+A daily calendar excludes a specified time range each day. It *may not* cross daily boundaries, and Quartz will enforce this.
+i.e. You cannot specify "11PM to 1AM" – to do that you'll need to specify two separate daily calendars.
+
+Exclusions in a Daily calendar are specified in a `exclude` with a `startTime` and `endTime` entry. Each of these fields
+follows a time format of `HH:MM[:SS[:mmm]]` where:
+    - HH is the hour of the specified time using military (24-hour) time, and must be in the range 0-23
+    - MM is the minute of the specified time, and must be in the range 0-59
+    - SS is the **optional** second of the specified time, and must be in the range 0-59
+    - mmm is the **optional** millisecond of the specified time, and must be in the range 0-999
+
+An example, which  doesn't allow jobs to run between 3AM and 5AM during the PST Timezone:
+
+```
+HourOfTheWolf {
+  type = Daily
+  description = "A period every day in which cron jobs are quiesced, during night hours"
+  exclude {
+    startTime = "03:00"
+    endTime   = "05:00:00"
+  }
+  timezone = PST
+}
+```
+
+##### 'Monthly' Calendar
+A monthly calendar excludes a set of days of the month, i.e. "Don't run a job on the 1st or 15th days of the month"
+
+It has only one configuration entry:
+
+- `excludeDays` - **[Seq[Int]]** *[required]* This is a list of Ints, between 1 and 31, representing a day of the month.
+
+An example:
+
+```
+FirstAndLastOfMonth {
+  type = Monthly
+  description = "A thinly veiled example to test monthly exclusions"
+  excludeDays = [1, 31]
+}
+```
+
+##### 'Weekly' Calendar
+A weekly calendar excludes a set of days of the week. *By default, Saturday and Sunday are always excluded*
+
+The configuration entries:
+
+- `excludeDays` - **[Seq[Int]]** *[required]* This is a list of Ints, between 1 and 7 – where 1 is Sunday and 7 is Saturday – representing days of the week to exclude.
+- `excludeWeekends` - **Boolean** *defaults to TRUE* Whether weekends should be excluded automatically by this scheduler or not. Note that `excludeWeekends` is overriden
+by `excludeDays` – if you specify `excludeWeekends = false` but `excludeDays` includes Sunday (`1`) or Saturday (`7`), then a configuration error will be thrown.
+
+An example, which excludes jobs from running on any Monday:
+```
+MondaysSuck {
+  type = Weekly
+  description = "Everyone, including this calendar, hates mondays as an integer"
+  excludeDays = [2]
+  excludeWeekends = false
+}
+```
+Note that by default, `excludeWeekends` would be true and thus `excludeDays` would implicitly be `[1, 2, 7]`
+
+##### 'Cron' Calendar
+A cron calendar excludes the set of times expressed by a given [Quartz CronExpression](http://quartz-scheduler.org/api/2.1.7/org/quartz/CronExpression.html).
+
+It has only one configuration entry:
+
+- `excludeExpression` - **[String]** *[required]* A valid [Quartz CronExpression](http://quartz-scheduler.org/api/2.1.7/org/quartz/CronExpression.html), which will be
+used to specify what times a job *cannot* run in (the opposite of a Cron Schedule).
+
+An example Calendar, which specifies an exclusion set of `00:00 - 07:59` and `18:00 - 23:59` (thereby only allowing jobs to run from `08:00 - 17:59`):
+
+```
+CronOnlyBusinessHours {
+  type = Cron
+  excludeExpression = "* * 0-7,18-23 ? *
+}
+```
+

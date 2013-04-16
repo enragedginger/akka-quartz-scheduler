@@ -60,7 +60,7 @@ object QuartzCalendars {
   /* weekly
    *  Excludes a set of days of the week, by default excludes Saturday and Sunday
    */
-  // excludeDays (list of ints from 1-7 where 1 is sunday, 7 is saturday) Also recognizes day name in full spelling TODO: Abbrevs
+  // excludeDays (list of ints from 1-7 where 1 is sunday, 7 is saturday)
   // excludeWeekends (boolean) By default TRUE, *overriden by excludeDays* (e.g. if you say this is true but exclude sunday, exclude wins)
 
   /* cron
