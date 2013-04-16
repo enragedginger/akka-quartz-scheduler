@@ -1,4 +1,4 @@
-package akka.extension.quartz
+package com.typesafe.akka.extension.quartz
 
 import com.typesafe.config.{ConfigObject, ConfigException, Config}
 import java.util.TimeZone

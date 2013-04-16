@@ -1,4 +1,4 @@
-package akka.extension.quartz
+package com.typesafe.akka.extension.quartz
 package test
 
 import org.specs2.runner.JUnitRunner

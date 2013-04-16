@@ -80,6 +80,8 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 Then, from within your Akka project you can create and access a Scheduler:
 
 ```scala
+import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
+
 val scheduler = QuartzSchedulerExtension(_system)
 
 ```

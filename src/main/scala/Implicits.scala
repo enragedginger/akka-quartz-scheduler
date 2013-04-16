@@ -1,4 +1,4 @@
-package akka.extension.quartz
+package com.typesafe.akka.extension.quartz
 
 import akka.event.LogSource
 

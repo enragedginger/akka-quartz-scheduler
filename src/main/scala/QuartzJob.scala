@@ -1,4 +1,4 @@
-package akka.extension.quartz
+package com.typesafe.akka.extension.quartz
 
 import org.quartz.{JobExecutionException, JobDataMap, JobExecutionContext, Job}
 import akka.event.{LoggingBus, Logging}
