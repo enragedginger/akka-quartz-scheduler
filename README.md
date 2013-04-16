@@ -79,7 +79,7 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 
-libraryDependencies += "com.typesafe" % "akka-actor" % "2.0.5"
+libraryDependencies += "com.typesafe.akka" % "akka-quartz-scheduler_akka-2.0.x" % "1.0.0"
 ```
 Then, from within your Akka project you can create and access a Scheduler:
 
