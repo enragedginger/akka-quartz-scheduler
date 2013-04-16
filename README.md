@@ -75,8 +75,12 @@ change of that sort is fixable without Operations needing to require a recompila
 
 Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
 
-        <PENDING>
+```
+resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
+
+libraryDependencies += "com.typesafe" % "akka-actor" % "2.0.5"
+```
 Then, from within your Akka project you can create and access a Scheduler:
 
 ```scala
