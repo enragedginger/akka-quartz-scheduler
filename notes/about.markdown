@@ -1,0 +1,3 @@
+(akka-quartz-scheduler)[https://github.com/typesafehub/akka-quartz-scheduler/] is an Akka extension (for 2.0.x+) which provides a more 'true' scheduling system for Akka using (Quartz)[http://quartz-scheduler.org/].
+
+Note that this is named and targeted as akka-quartz-scheduler for a reason: it is not a complete port of Quartz. Rather, we utilize the concepts of Quartz' scheduling system to provide a more robust and reliable scheduling component to Akka than the one already available.  The goal is to provide Akka with a scheduling system that is closer to what one would expect for Cron type jobs – setup long-running ActorSystems that can have certain events kick off by Quartz.

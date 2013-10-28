@@ -1,0 +1,4 @@
+* Added support for Akka 2.0.x, 2.1.x and 2.2.x in separate, special builds (See installation notes in (README.md)[https://github.com/typesafehub/akka-quartz-scheduler/blob/master/README.md#usage]
+* Added support for cancelling, pausing, and resuming jobs
+* Added support for suspending the entire scheduler and restarting it
+* Added code to shut the Quartz scheduler down when the ActorSystem terminates; the lack thereof was causing serious behavioral FUBAR in Play! Dev mode

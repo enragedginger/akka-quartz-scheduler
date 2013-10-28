@@ -2,7 +2,7 @@ name := "akka-quartz-scheduler"
 
 organization := "com.typesafe.akka"
 
-version := "1.2.0-akka-2.1.x"
+version := "1.2.0"
 
 scalaVersion := "2.10.1"
 
