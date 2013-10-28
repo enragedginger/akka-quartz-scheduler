@@ -77,7 +77,7 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 
-libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.2.x"
+libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.1.x"
 ```
 
 Note that the version name includes the akka revision (Previous releases included the akka release in the artifact name, which broken maven).
