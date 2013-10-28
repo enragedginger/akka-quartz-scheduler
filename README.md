@@ -64,7 +64,6 @@ This, among other things, prevents accidental mistakes such as changing a schedu
 change of that sort is fixable without Operations needing to require a recompilation of source code.
 
 ### TODO
-- ensure the ActorSystem shutdown can shut the scheduler in the extension down
 - investigate supporting listeners, with actor hookarounds.
 - misfires and recovery model - play nice with supervision, deathwatch, etc
   [docs page 23 - very close to supervision strategy]
