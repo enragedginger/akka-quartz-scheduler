@@ -1,8 +1,8 @@
 akka-quartz-scheduler
 =====================
 
-Quartz Extension and utilities for true scheduling in Akka 2.0+ (right now built against 2.0.x, but will target
-all versions eventually)
+Quartz Extension and utilities for true scheduling in Akka 2.0+ (releases are built against specific akka release segments, 
+see installation below)
 
 Note that this is named and targeted as akka-quartz-scheduler for a reason: it is *not* a complete port of Quartz.
 Rather, we utilize the concepts of Quartz' scheduling system to provide a more robust and reliable scheduling component
@@ -77,10 +77,10 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 
-libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.0.x"
+libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.1.x"
 ```
 
-As with Akka 2.0.x, we currently only publish `akka-quartz-scheduler` for Scala 2.9.1. Note that the version name includes the akka revision (Previous releases included the akka release in the artifact name, which broken maven).
+Note that the version name includes the akka revision (Previous releases included the akka release in the artifact name, which broken maven).
 
 Then, from within your Akka project you can create and access a Scheduler:
 

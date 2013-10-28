@@ -1,22 +1,22 @@
-name := "akka-quartz-scheduler" //_akka-2.0.x"
+name := "akka-quartz-scheduler" 
 
 organization := "com.typesafe.akka"
 
-version := "1.1.0-akka-2.0.x"
+version := "1.2.0-akka-2.1.x"
 
-scalaVersion := "2.9.1"
+scalaVersion := "2.10.1"
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases"
 
 
 libraryDependencies ++= Seq(
-    "com.typesafe.akka" % "akka-actor" % "2.0.5" % "provided",
+    "com.typesafe.akka" %% "akka-actor" % "2.1.4" % "provided",
     "org.quartz-scheduler" % "quartz" % "2.1.7",
     // test dependencies
-    "com.typesafe.akka" % "akka-testkit" % "2.0.5" % "test",
+    "com.typesafe.akka" %% "akka-testkit" % "2.1.4" % "test",
     "org.specs2" %% "specs2" % "1.12.3" % "test",
     "junit" % "junit" % "4.7" % "test",
     "org.slf4j" % "slf4j-api" % "1.6.1" % "test",
     "org.slf4j" % "slf4j-jcl" % "1.6.1" % "test",
-    "org.scalatest" %% "scalatest" % "1.6.1" % "test"
+    "org.scalatest" %% "scalatest" % "1.9.1" % "test"
 )

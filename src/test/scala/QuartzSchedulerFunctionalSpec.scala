@@ -6,9 +6,7 @@ import org.junit.runner.RunWith
 import com.typesafe.config.ConfigFactory
 import akka.actor._
 import akka.testkit._
-import akka.util.duration._
-import akka.util.Duration
-import java.util.concurrent.TimeUnit._
+import scala.concurrent.duration._
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, WordSpec}
 import org.scalatest.matchers.MustMatchers
