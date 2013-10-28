@@ -2,67 +2,64 @@
 package com.typesafe.akka.extension.quartz
 package test
 
-import org.specs2.runner.JUnitRunner
-import org.specs2.Specification
 import org.junit.runner.RunWith
-import org.specs2.matcher.ThrownExpectations
 import com.typesafe.config.ConfigFactory
 import akka.actor._
 import akka.testkit._
 import akka.util.duration._
 import akka.util.Duration
 import java.util.concurrent.TimeUnit._
+import org.scalatest.junit.JUnitRunner
+import org.scalatest.{BeforeAndAfterAll, WordSpec}
+import org.scalatest.matchers.MustMatchers
 
-/**
- * Separate base trait needed to get the non-default constructor to initialize properly,
- * see http://brianmckenna.org/blog/akka_scalacheck_specs2  (or just try moving this out of a trait and back on
- * the class)
- */
-trait AkkaTestConfig extends Specification
-                        with ThrownExpectations
-                        with ImplicitSender { self: TestKit => }
 
 @RunWith(classOf[JUnitRunner])
 class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_system: ActorSystem)
-                                                             with AkkaTestConfig {
+  with ImplicitSender
+  with WordSpec
+  with MustMatchers with BeforeAndAfterAll {
+
+  override def afterAll {
+    system.shutdown()
+    system.awaitTermination()
+  }
 
   def this() = this(ActorSystem("QuartzSchedulerFunctionalSpec", SchedulingFunctionalTest.sampleConfiguration))
 
-
-  def is =
-  sequential /** parallel execution makes a mess when testing actorsystems */ ^
-  "This is a specification to validate the behavior of the Quartz Scheduler in a functional manner" ^
-                                                      p^
-  "The Quartz Scheduling Extension should"             ^
-      "Reject a job which is not named in the config"  ! rejectUnconfiguredJob ^
-      "Properly setup & execute a Cron Job"            ! scheduleCronJob   ^
-                                                         end
-
-  def rejectUnconfiguredJob = {
-    val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
-    val probe = TestProbe()
-    receiver ! NewProbe(probe.ref)
-    lazy val schedule = QuartzSchedulerExtension(_system).schedule("fooBarBazSpamEggsOMGPonies!", receiver, Tick)
-
-    schedule must throwA[IllegalArgumentException]
-  }
-
-  def scheduleCronJob = {
-    val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
-    val probe = TestProbe()
-    receiver ! NewProbe(probe.ref)
-    val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10Seconds", receiver, Tick)
+  "The Quartz Scheduling Extension"  must {
+    "Reject a job which is not named in the config" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
 
 
-    /* This is a somewhat questionable test as the timing between components may not match the tick off. */
-    val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
-      case Tock =>
-        Tock
+      evaluating {
+        QuartzSchedulerExtension(_system).schedule("fooBarBazSpamEggsOMGPonies!", receiver, Tick)
+      } must produce[IllegalArgumentException]
+
     }
 
+    "Properly Setup & Execute a Cron Job" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10Seconds", receiver, Tick)
 
-    receipt must contain(Tock) and have size(5)
+
+      /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
+        case Tock =>
+          Tock
+      }
+
+
+      receipt must contain(Tock)
+      receipt must have size(5)
+
+    }
   }
+
 
   case class NewProbe(probe: ActorRef)
   case object Tick
@@ -81,11 +78,13 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
 
 
+
 }
 
 object SchedulingFunctionalTest {
     lazy val sampleConfiguration = { ConfigFactory.parseString("""
     akka {
+      event-handlers = ["akka.testkit.TestEventListener"]
       loglevel = "INFO"
       quartz {
         defaultTimezone = "UTC"
