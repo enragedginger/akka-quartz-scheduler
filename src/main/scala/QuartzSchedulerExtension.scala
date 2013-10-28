@@ -9,9 +9,11 @@ import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
 import org.quartz.impl.DirectSchedulerFactory
 import java.util.{Date, TimeZone}
 import scala.collection.immutable
-import org.quartz.{TriggerUtils, Trigger, TriggerBuilder, JobBuilder}
+import org.quartz._
 import org.quartz.core.jmx.JobDataMapSupport
 import org.quartz.impl.triggers.{SimpleTriggerImpl, CronTriggerImpl}
+import scala.Some
+import scala.collection.mutable
 
 
 object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension]
@@ -63,12 +65,106 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   val schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone).map { kv =>
     kv._1.toUpperCase -> kv._2
   }
+  val runningJobs: mutable.Map[String, JobKey] = mutable.Map.empty[String, JobKey]
 
   log.debug("Configured Schedules: {}", schedules)
 
   scheduler.start
 
   initialiseCalendars()
+
+  /**
+   * Puts the Scheduler in 'standby' mode, temporarily halting firing of triggers.
+   * Resumable by running 'start'
+   */
+  def standby(): Unit = scheduler.standby()
+
+  def isInStandbyMode = scheduler.isInStandbyMode
+
+  /**
+   * Starts up the scheduler. This is typically used from userspace only to restart
+   * a scheduler in standby mode.
+   */
+  def start(): Boolean = if (isStarted) {
+    scheduler.start
+    true
+  } else {
+    log.warning("Cannot start scheduler, already started.")
+    false
+  }
+
+  def isStarted = scheduler.isStarted
+  /**
+   * Suspends (pauses) all jobs in the scheduler
+   */
+  def suspendAll(): Unit = {
+    log.info("Suspending all Quartz jobs.")
+    scheduler.pauseAll()
+  }
+
+  /**
+   * Attempts to suspend (pause) the given job
+   * @param name The name of the job, as defined in the schedule
+   * @return Success or Failure in a Boolean
+   */
+  def suspendJob(name: String): Boolean = {
+    runningJobs.get(name) match {
+      case Some(job) =>
+        log.info("Suspending Quartz Job '{}'", name)
+        scheduler.pauseJob(job)
+        true
+      case None =>
+        log.warning("No running Job named '{}' found: Cannot suspend", name)
+        false
+    }
+    // TODO - Exception checking?
+  }
+
+  /**
+   * Attempts to resume (un-pause) the given job
+   * @param name The name of the job, as defined in the schedule
+   * @return Success or Failure in a Boolean
+   */
+  def resumeJob(name: String): Boolean = {
+    runningJobs.get(name) match {
+      case Some(job) =>
+        log.info("Resuming Quartz Job '{}'", name)
+        scheduler.resumeJob(job)
+        true
+      case None =>
+        log.warning("No running Job named '{}' found: Cannot unpause", name)
+        false
+    }
+    // TODO - Exception checking?
+  }
+
+  /**
+   * Unpauses all jobs in the scheduler
+   */
+  def resumeAll(): Unit = {
+    log.info("Resuming all Quartz jobs.")
+  }
+
+  /**
+   * Cancels the running job and all associated triggers
+   * @param name The name of the job, as defined in the schedule
+   * @return Success or Failure in a Boolean
+   */
+  def cancelJob(name: String): Boolean = {
+    runningJobs.get(name) match {
+      case Some(job) =>
+        log.info("Cancelling Quartz Job '{}'", name)
+        val result = scheduler.deleteJob(job)
+        runningJobs -= name
+        result
+      case None =>
+        log.warning("No running Job named '{}' found: Cannot cancel", name)
+        false
+    }
+    // TODO - Exception checking?
+
+  }
+
 
 
   /**
@@ -105,6 +201,10 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
                         .usingJobData(jobData)
                         .withDescription(schedule.description.getOrElse(null))
                         .build()
+
+    log.debug("Adding jobKey {} to runningJobs map.", job.getKey)
+
+    runningJobs += name -> job.getKey
 
     log.debug("Building Trigger.")
     val trigger = schedule.buildTrigger(name)
