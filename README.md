@@ -107,7 +107,7 @@ val scheduler = QuartzSchedulerExtension(_system)
 Where `_system` represents an instance of an Akka `ActorSystem` – note that `QuartzSchedulerExtension` is scoped
 to that `ActorSystem` and there will only ever be one instance of it per `ActorSystem`.
 
-There is only one external method on the `scheduler` instance, which is `schedule`:
+There primary external method on the `scheduler` instance is `schedule`, used for scheduling a job:
 
 ```scala
 def schedule(name: String, receiver: ActorRef, msg: AnyRef): java.util.Date
@@ -138,6 +138,7 @@ Where the `Tick` message is handled normally inside the Actor's message loop. If
 messages were dealt with more immediately than "normal" actor messages, they could utilize [Priority Mailboxes](http://doc.akka.io/docs/akka/2.0.5/scala/dispatchers.html).
 
 The details on the configuration of a job is outlined below in the section '*Schedule Configuration*'.
+
 
 ### Configuration of Quartz Scheduler
 
