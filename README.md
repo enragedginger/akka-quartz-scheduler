@@ -68,7 +68,6 @@ change of that sort is fixable without Operations needing to require a recompila
 - misfires and recovery model - play nice with supervision, deathwatch, etc
   [docs page 23 - very close to supervision strategy]
 - allow specification of delayed start time
-- permit cancellation, suspension and status checks of schedules
 
 ## Usage
 
@@ -78,7 +77,7 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
 
 
-libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.1.0-akka-2.0.x"
+libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.0.x"
 ```
 
 As with Akka 2.0.x, we currently only publish `akka-quartz-scheduler` for Scala 2.9.1. Note that the version name includes the akka revision (Previous releases included the akka release in the artifact name, which broken maven).
