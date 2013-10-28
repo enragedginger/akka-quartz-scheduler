@@ -149,6 +149,11 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
     log.debug("Initialized a Quartz Scheduler '{}'", scheduler)
 
+    system.registerOnTermination({
+      log.info("Shutting down Quartz Scheduler with ActorSystem Termination (Any jobs awaiting completion will end as well, as actors are ending)...")
+      scheduler.shutdown(false)
+    })
+
     scheduler
   }
 
