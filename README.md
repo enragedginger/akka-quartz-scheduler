@@ -1,9 +1,6 @@
 akka-quartz-scheduler
 =====================
 
-**This project is looking for a new maintainer! Please notify us in [issue #8](https://github.com/typesafehub/akka-quartz-scheduler/issues/8)
-if you would like to take over this project. It will be deleted in a few months unless we find a new owner.**
-
 Quartz Extension and utilities for true scheduling in Akka 2.0+ (releases are built against specific akka release segments, 
 see installation below)
 
