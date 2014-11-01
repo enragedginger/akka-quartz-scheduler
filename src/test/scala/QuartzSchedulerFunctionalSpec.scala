@@ -1,4 +1,3 @@
-
 package com.typesafe.akka.extension.quartz
 package test
 
@@ -8,14 +7,14 @@ import akka.actor._
 import akka.testkit._
 import scala.concurrent.duration._
 import org.scalatest.junit.JUnitRunner
-import org.scalatest.{BeforeAndAfterAll, WordSpec}
-import org.scalatest.matchers.MustMatchers
+import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
+import org.scalatest.MustMatchers
 
 
 @RunWith(classOf[JUnitRunner])
 class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_system: ActorSystem)
   with ImplicitSender
-  with WordSpec
+  with WordSpecLike
   with MustMatchers with BeforeAndAfterAll {
 
   override def afterAll {
@@ -32,9 +31,9 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       receiver ! NewProbe(probe.ref)
 
 
-      evaluating {
+      an[IllegalArgumentException] must be thrownBy {
         QuartzSchedulerExtension(_system).schedule("fooBarBazSpamEggsOMGPonies!", receiver, Tick)
-      } must produce[IllegalArgumentException]
+      }
 
     }
 

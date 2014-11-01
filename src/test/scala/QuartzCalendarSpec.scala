@@ -48,13 +48,13 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     def _day(month: Int, day: Int) = {
       val _day = Calendar.getInstance()
       _day.set(MONTH, month)
-      _day.set(DAY_OF_MONTH, day)
+      _day.set(DAY_OF_MONTH, day - 1)
       _day
     }
 
 
     cal.isDayExcluded(_day(DECEMBER, 25)) must beTrue
-    cal.isDayExcluded(_day(JANUARY, 01)) must beTrue
+    cal.isDayExcluded(_day(JANUARY, 1)) must beTrue
     cal.isDayExcluded(_day(FEBRUARY, 25)) must beFalse
     /* Check that regardless of year, we're also OK -- we defined Christmas 2000, but we can go backwards or forwards */
     cal.isDayExcluded(getCalendar(DECEMBER, 25, 1995)) must beTrue
@@ -77,7 +77,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
 
     cal.isTimeIncluded(_epoch(MARCH, 31, 2013)) must beTrue
     cal.isTimeIncluded(_epoch(APRIL, 20, 2014)) must beTrue
-    cal.isTimeIncluded(_epoch(APRIL, 05, 2015)) must beTrue
+    cal.isTimeIncluded(_epoch(APRIL, 5, 2015)) must beTrue
     cal.isTimeIncluded(_epoch(MARCH, 27, 2016)) must beTrue
     cal.isTimeIncluded(_epoch(APRIL, 16, 2017)) must beTrue
 
@@ -86,7 +86,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
       */
     cal.isTimeIncluded(_epoch(APRIL, 17, 2017)) must beFalse
     cal.isTimeIncluded(_epoch(DECEMBER, 25, 20123)) must beFalse
-    cal.isTimeIncluded(_epoch(JANUARY, 02, 2023)) must beFalse
+    cal.isTimeIncluded(_epoch(JANUARY, 2, 2023)) must beFalse
   } pendingUntilFixed
 
   def parseDaily = {
@@ -111,7 +111,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     calendars("FirstOfMonth") must haveClass[MonthlyCalendar]
     val cal = calendars("FirstOfMonth").asInstanceOf[MonthlyCalendar]
 
-    cal.getDaysExcluded.toList must haveTheSameElementsAs(_monthDayRange(List(1)))
+    cal.getDaysExcluded.toList must containTheSameElementsAs(_monthDayRange(List(1)))
   }
 
   def parseMonthlyList = {
@@ -119,7 +119,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     calendars("FirstAndLastOfMonth") must haveClass[MonthlyCalendar]
     val cal = calendars("FirstAndLastOfMonth").asInstanceOf[MonthlyCalendar]
 
-    cal.getDaysExcluded.toList must haveTheSameElementsAs(_monthDayRange(List(1, 31)))
+    cal.getDaysExcluded.toList must containTheSameElementsAs(_monthDayRange(List(1, 31)))
   }
 
   def parseWeeklyInt = {
@@ -127,7 +127,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     calendars("MondaysSuck") must haveClass[WeeklyCalendar]
     val cal = calendars("MondaysSuck").asInstanceOf[WeeklyCalendar]
 
-    cal.getDaysExcluded.toList must haveTheSameElementsAs(_weekDayRange(List(2)))
+    cal.getDaysExcluded.toList must containTheSameElementsAs(_weekDayRange(List(2)))
   }
 
   def parseCronStyle = {
@@ -190,7 +190,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     import Calendar._
     val _day = Calendar.getInstance(tz)
     _day.set(MONTH, month)
-    _day.set(DAY_OF_MONTH, day)
+    _day.set(DAY_OF_MONTH, day - 1)
     _day.set(YEAR, year)
     _day
   }
