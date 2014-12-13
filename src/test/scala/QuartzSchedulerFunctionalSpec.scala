@@ -1,6 +1,7 @@
 package com.typesafe.akka.extension.quartz
 package test
 
+import akka.japi.Option.Some
 import org.junit.runner.RunWith
 import com.typesafe.config.ConfigFactory
 import akka.actor._
@@ -54,6 +55,43 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       receipt must contain(Tock)
       receipt must have size(5)
 
+    }
+  }
+
+  "The Quartz Scheduling Extension with Dynamic Create" must {
+    "Throw exception if creating schedule that already exists" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+
+      evaluating {
+        QuartzSchedulerExtension(_system).createSchedule("cronEvery10Seconds", None, "*/10 * * ? * *", None)
+      } must produce[IllegalArgumentException]
+    }
+
+    "Throw exception if creating a schedule that has invalid cron expression" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+
+      evaluating {
+        QuartzSchedulerExtension(_system).createSchedule("nonExistingCron", None, "*/10 x * ? * *", None)
+      } must produce[IllegalArgumentException]
+    }
+
+    "Add new, schedulable schedule with valid inputs" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+
+      QuartzSchedulerExtension(_system).createSchedule("nonExistingCron", Some("Creating new dynamic schedule"), "*/1 * * ? * *", None)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("nonExistingCron", receiver, Tick)
+
+
+      /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+      val receipt = probe.receiveWhile(Duration(30, SECONDS), Duration(15, SECONDS), 5) {
+        case Tock =>
+          Tock
+      }
+
+      receipt must contain(Tock)
+      receipt must have size(5)
     }
   }
 

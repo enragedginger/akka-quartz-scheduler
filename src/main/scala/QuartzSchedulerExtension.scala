@@ -1,19 +1,18 @@
 package com.typesafe.akka.extension.quartz
 
-import akka.actor._
-import akka.event.{LogSource, Logging}
-
-import com.typesafe.config.{ConfigFactory, Config}
-
-import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
-import org.quartz.impl.DirectSchedulerFactory
+import java.text.ParseException
 import java.util.{Date, TimeZone}
-import scala.collection.immutable
+
+import akka.actor._
+import akka.event.Logging
+import com.typesafe.config.ConfigFactory
 import org.quartz._
 import org.quartz.core.jmx.JobDataMapSupport
-import org.quartz.impl.triggers.{SimpleTriggerImpl, CronTriggerImpl}
-import scala.Some
-import scala.collection.mutable
+import org.quartz.impl.DirectSchedulerFactory
+import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
+
+import scala.collection.{immutable, mutable}
+import scala.util.control.Exception._
 
 
 object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension]
@@ -62,7 +61,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    *
    * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
    */
-  val schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone).map { kv =>
+  var schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone).map { kv =>
     kv._1.toUpperCase -> kv._2
   }
   val runningJobs: mutable.Map[String, JobKey] = mutable.Map.empty[String, JobKey]
@@ -165,7 +164,29 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
   }
 
-
+  /**
+   * Create a schedule programmatically (must still be scheduled by calling 'schedule')
+   *
+   * @param name A String identifying the job
+   * @param description A string describing the purpose of the job
+   * @param cronExpression A string with the cron-type expression
+   * @param calendars A list of strings describing which calendars to use
+   *
+   */
+  def createSchedule(name: String, description: Option[String], cronExpression: String, calendars: Option[List[String]], timezone: TimeZone = defaultTimezone) = schedules.get(name.toUpperCase) match {
+    case Some(sched) =>
+      throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
+    case None =>
+      val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
+        case Left(t) =>
+          throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
+        case Right(expr) =>
+          expr
+      }
+      val calendarsVal = calendars getOrElse Seq.empty[String]
+      val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendarsVal)
+      schedules += (name.toUpperCase -> quartzSchedule)
+  }
 
   /**
    * Schedule a job, whose named configuration must be available
