@@ -48,7 +48,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     def _day(month: Int, day: Int) = {
       val _day = Calendar.getInstance()
       _day.set(MONTH, month)
-      _day.set(DAY_OF_MONTH, day - 1)
+      _day.set(DAY_OF_MONTH, day)
       _day
     }
 
@@ -190,7 +190,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     import Calendar._
     val _day = Calendar.getInstance(tz)
     _day.set(MONTH, month)
-    _day.set(DAY_OF_MONTH, day - 1)
+    _day.set(DAY_OF_MONTH, day)
     _day.set(YEAR, year)
     _day
   }
