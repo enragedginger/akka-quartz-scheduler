@@ -1,10 +1,10 @@
 name := "akka-quartz-scheduler"
 
-organization := "com.typesafe.akka"
+organization := "com.enragedginger"
 
-version := "1.2.0-akka-2.3.x"
+version := "1.3.0-akka-2.3.x"
 
-scalaVersion := "2.11.1"
+scalaVersion := "2.11.4"
 
 resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases"
 
@@ -22,3 +22,25 @@ libraryDependencies ++= Seq(
 )
 
 scalacOptions ++= Seq("-deprecation")
+
+pomIncludeRepository := { _ => false }
+
+pomExtra := (
+  <url>https://github.com/enragedginger/akka-quartz-scheduler</url>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+    <scm>
+        <url>https://github.com/enragedginger/akka-quartz-scheduler.git</url>
+        <connection>https://github.com/enragedginger/akka-quartz-scheduler.git</connection>
+    </scm>
+    <developers>
+        <developer>
+            <name>Stephen M. Hopper</name>
+            <email>stephen@enragedginger.com</email>
+        </developer>
+    </developers>)
