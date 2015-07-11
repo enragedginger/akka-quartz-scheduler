@@ -102,6 +102,14 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
+   * Shutdown the scheduler manually. The scheduler cannot be re-started.
+   * @param waitForJobsToComplete wait for jobs to complete? default to false
+   */
+  def shutdown(waitForJobsToComplete: Boolean = false) = {
+    scheduler.shutdown(waitForJobsToComplete)
+  }
+
+  /**
    * Attempts to suspend (pause) the given job
    * @param name The name of the job, as defined in the schedule
    * @return Success or Failure in a Boolean
@@ -220,7 +228,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     val job = JobBuilder.newJob(classOf[SimpleActorMessageJob])
                         .withIdentity(name + "_Job")
                         .usingJobData(jobData)
-                        .withDescription(schedule.description.getOrElse(null))
+                        .withDescription(schedule.description.orNull)
                         .build()
 
     log.debug("Adding jobKey {} to runningJobs map.", job.getKey)
