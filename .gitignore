@@ -15,3 +15,5 @@ project/plugins/project/
 # IDEA
 .idea
 .idea_modules
+*.iws
+*.ipr
