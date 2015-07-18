@@ -84,15 +84,11 @@ class SimpleActorMessageJob extends Job {
    * @throws JobExecutionException
    */
   def execute(context: JobExecutionContext) {
-
     implicit val dataMap = context.getJobDetail.getJobDataMap
-
     val key  = context.getJobDetail.getKey
 
     try {
-
       val logBus = as[LoggingBus]("logBus")
-
       val receiver = as[ActorRef]("receiver")
 
       /**
@@ -101,11 +97,8 @@ class SimpleActorMessageJob extends Job {
        * so this casting (and the initial save into the map) may involve boxing.
        **/
       val msg = dataMap.get("message")
-
       val log = Logging(logBus, this)
-
       log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
-
       receiver ! msg
     } catch {
       // All exceptions thrown from a job, including Runtime, must be wrapped in a JobExcecutionException or Quartz ignores it

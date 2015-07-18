@@ -90,22 +90,22 @@ sealed trait QuartzSchedule {
    */
   def buildTrigger(name: String): T = {
     @tailrec
-    def addCalendars(_t: TriggerBuilder[T], _cals: Seq[String]): TriggerBuilder[T] = {
-      if (_cals.length == 0)
-        _t
-      else if (_cals.length == 1)
-        _t.modifiedByCalendar(_cals.head)
+    def addCalendars(triggerBuilder: TriggerBuilder[T], calendars: Seq[String]): TriggerBuilder[T] = {
+      if (calendars.length == 0)
+        triggerBuilder
+      else if (calendars.length == 1)
+        triggerBuilder.modifiedByCalendar(calendars.head)
       else
-        addCalendars(_t.modifiedByCalendar(_cals.head), _cals.tail)
+        addCalendars(triggerBuilder.modifiedByCalendar(calendars.head), calendars.tail)
     }
 
-    val tB = TriggerBuilder.newTrigger()
+    val triggerBuilder = TriggerBuilder.newTrigger()
                            .withIdentity(name + "_Trigger")
                            .withDescription(description.getOrElse(null))
                            .startNow()
                            .withSchedule(schedule)
 
-    addCalendars(tB, calendars).build()
+    addCalendars(triggerBuilder, calendars).build()
   }
 
 }
