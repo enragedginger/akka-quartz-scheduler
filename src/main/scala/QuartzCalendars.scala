@@ -94,6 +94,7 @@ object QuartzCalendars {
 
   def parseAnnualCalendar(name: String, config: Config)(tz: TimeZone): AnnualCalendar = {
     val dateFmt = new SimpleDateFormat("MM-dd")
+    dateFmt.setTimeZone(tz)
     val excludeDates = catchMissing or catchWrongType either { config.getStringList("excludeDates") } match {
       case Left(t) =>
         throw new IllegalArgumentException("Invalid or Missing Configuration entry 'excludeDates' for Annual calendar '%s'. You must provide a list of ISO-8601 compliant dates ('YYYY-MM-DD').".format(name), t)
@@ -114,6 +115,7 @@ object QuartzCalendars {
 
   def parseHolidayCalendar(name: String, config: Config)(tz: TimeZone): HolidayCalendar = {
     val dateFmt = new SimpleDateFormat("yyyy-MM-dd")
+    dateFmt.setTimeZone(tz)
     val excludeDates = catchMissing or catchWrongType either { config.getStringList("excludeDates") } match {
       case Left(t) =>
         throw new IllegalArgumentException("Invalid or Missing Configuration entry 'excludeDates' for Holiday Calendar '%s'. You must provide a list of ISO-8601 compliant dates ('YYYY-MM-DD').".format(name), t)
