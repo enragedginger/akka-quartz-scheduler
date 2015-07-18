@@ -145,6 +145,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    */
   def resumeAll(): Unit = {
     log.info("Resuming all Quartz jobs.")
+    scheduler.resumeAll()
   }
 
   /**
@@ -164,7 +165,6 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
         false
     }
     // TODO - Exception checking?
-
   }
 
   /**
@@ -176,15 +176,15 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * @param calendar An optional calendar to use.
    *
    */
-  def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone) = schedules.get(name.toUpperCase) match {
+  def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None,
+                     timezone: TimeZone = defaultTimezone) = schedules.get(name.toUpperCase) match {
     case Some(sched) =>
       throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
     case None =>
       val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
         case Left(t) =>
           throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
-        case Right(expr) =>
-          expr
+        case Right(expr) => expr
       }
       val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
       schedules += (name.toUpperCase -> quartzSchedule)
@@ -199,10 +199,8 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * @return A date, which indicates the first time the trigger will fire.
    */
   def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = schedules.get(name.toUpperCase) match {
-    case Some(sched) =>
-      scheduleJob(name, receiver, msg)(sched)
-    case None =>
-      throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
+    case Some(sched) => scheduleJob(name, receiver, msg)(sched)
+    case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
 
   /**
@@ -223,7 +221,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     val job = JobBuilder.newJob(classOf[SimpleActorMessageJob])
                         .withIdentity(name + "_Job")
                         .usingJobData(jobData)
-                        .withDescription(schedule.description.getOrElse(null))
+                        .withDescription(schedule.description.orNull)
                         .build()
 
     log.debug("Adding jobKey {} to runningJobs map.", job.getKey)
