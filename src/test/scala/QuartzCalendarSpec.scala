@@ -34,7 +34,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
 
 
   def parseCalendarList = {
-    // tood - more robust check
+    //TODO - more robust check
     calendars must have size(7)
   }
 

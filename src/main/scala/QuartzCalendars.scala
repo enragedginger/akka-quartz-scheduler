@@ -78,10 +78,8 @@ object QuartzCalendars {
   def apply(config: Config, defaultTimezone: TimeZone): immutable.Map[String, Calendar] = catchMissing opt {
     /** the extra toMap call is because the asScala gives us a mutable map... */
     config.getConfig("calendars").root.asScala.toMap.flatMap {
-      case (key, value: ConfigObject) =>
-        Some(key -> parseCalendar(key, value.toConfig, defaultTimezone))
-      case _ =>
-        None
+      case (key, value: ConfigObject) => Some(key -> parseCalendar(key, value.toConfig, defaultTimezone))
+      case _ => None
     }
   } getOrElse immutable.Map.empty[String, Calendar]
 
