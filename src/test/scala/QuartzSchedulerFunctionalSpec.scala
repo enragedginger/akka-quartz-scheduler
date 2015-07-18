@@ -62,17 +62,17 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
     "Throw exception if creating schedule that already exists" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
 
-      evaluating {
+      an [IllegalArgumentException] must be thrownBy {
         QuartzSchedulerExtension(_system).createSchedule("cronEvery10Seconds", None, "*/10 * * ? * *", None)
-      } must produce[IllegalArgumentException]
+      }
     }
 
     "Throw exception if creating a schedule that has invalid cron expression" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
 
-      evaluating {
+      an [IllegalArgumentException] must be thrownBy {
         QuartzSchedulerExtension(_system).createSchedule("nonExistingCron", None, "*/10 x * ? * *", None)
-      } must produce[IllegalArgumentException]
+      }
     }
 
     "Add new, schedulable schedule with valid inputs" in {
