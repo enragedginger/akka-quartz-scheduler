@@ -83,13 +83,16 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   /**
    * Starts up the scheduler. This is typically used from userspace only to restart
    * a scheduler in standby mode.
+   * @return True if calling this function resulted in the starting of the scheduler; false if the scheduler
+   *         was already started.
    */
-  def start(): Boolean = if (isStarted) {
-    log.warning("Cannot start scheduler, already started.")
-    false
-  } else {
-    scheduler.start
-    true
+  def start(): Boolean = isStarted match {
+    case true =>
+      log.warning("Cannot start scheduler, already started.")
+      false
+    case false =>
+      scheduler.start
+      true
   }
 
   def isStarted = scheduler.isStarted
@@ -211,12 +214,13 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef)(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
     log.info("Setting up scheduled job '{}', with '{}'", name, schedule)
-    val b = Map.newBuilder[String, AnyRef]
-    b += "logBus" -> system.eventStream
-    b += "receiver" -> receiver
-    b += "message" -> msg
+    val jobDataMap = Map[String, AnyRef](
+      "logBus" -> system.eventStream,
+      "receiver" -> receiver,
+      "message" -> msg
+    )
 
-    val jobData = JobDataMapSupport.newJobDataMap(b.result.asJava)
+    val jobData = JobDataMapSupport.newJobDataMap(jobDataMap.asJava)
     val job = JobBuilder.newJob(classOf[SimpleActorMessageJob])
                         .withIdentity(name + "_Job")
                         .usingJobData(jobData)
