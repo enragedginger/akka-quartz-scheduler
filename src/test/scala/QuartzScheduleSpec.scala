@@ -103,7 +103,7 @@ class QuartzScheduleSpec extends Specification with ThrownExpectations { def is 
         cronEvery30Seconds {
           description = "A cron job that fires off every 30 seconds"
           expression = "*/30 * * ? * *"
-          calendars = ["CronOnlyBusinessHours"]
+          calendar = "CronOnlyBusinessHours"
         }
         cronEvery10Seconds {
           description = "A cron job that fires off every 10 seconds"

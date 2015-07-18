@@ -173,10 +173,10 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * @param name A String identifying the job
    * @param description A string describing the purpose of the job
    * @param cronExpression A string with the cron-type expression
-   * @param calendars A list of strings describing which calendars to use
+   * @param calendar An optional calendar to use.
    *
    */
-  def createSchedule(name: String, description: Option[String], cronExpression: String, calendars: Option[List[String]], timezone: TimeZone = defaultTimezone) = schedules.get(name.toUpperCase) match {
+  def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone) = schedules.get(name.toUpperCase) match {
     case Some(sched) =>
       throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
     case None =>
@@ -186,8 +186,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
         case Right(expr) =>
           expr
       }
-      val calendarsVal = calendars getOrElse Seq.empty[String]
-      val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendarsVal)
+      val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
       schedules += (name.toUpperCase -> quartzSchedule)
   }
 

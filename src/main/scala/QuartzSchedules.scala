@@ -46,18 +46,18 @@ object QuartzSchedules {
       TimeZone.getTimeZone(config.getString("timezone")) // todo - this is bad, as Java silently swaps the timezone if it doesn't match...
     } getOrElse defaultTimezone
 
-    val calendars = catchMissing opt {
-      config.getStringList("calendars").asScala // TODO - does Quartz validate for us that a calendar referenced is valid/invalid?
-    } getOrElse Seq.empty[String]
+    val calendar = catchMissing opt {
+      Option(config.getString("calendar")) // TODO - does Quartz validate for us that a calendar referenced is valid/invalid?
+    } getOrElse None
 
     val desc = catchMissing opt {
       config.getString("description")
     }
 
-    parseCronSchedule(name, desc, config)(timezone, calendars)
+    parseCronSchedule(name, desc, config)(timezone, calendar)
   }
 
-  def parseCronSchedule(name: String, desc: Option[String], config: Config)(tz: TimeZone, calendars: Seq[String]): QuartzCronSchedule = {
+  def parseCronSchedule(name: String, desc: Option[String], config: Config)(tz: TimeZone, calendar: Option[String]): QuartzCronSchedule = {
     val expression = catchMissing or catchWrongType either { config.getString("expression") } match {
       case Left(t) =>
         throw new IllegalArgumentException("Invalid or Missing Configuration entry 'expression' for Cron Schedule '%s'. You must provide a valid Quartz CronExpression.".format(name), t)
@@ -67,7 +67,7 @@ object QuartzSchedules {
         case Right(expr) => expr
       }
     }
-    new QuartzCronSchedule(name, desc, expression, tz, calendars)
+    new QuartzCronSchedule(name, desc, expression, tz, calendar)
   }
 }
 
@@ -81,7 +81,10 @@ sealed trait QuartzSchedule {
   // todo - I don't like this as we can't guarantee the builder's state, but the Quartz API forces our hand
   def schedule: ScheduleBuilder[T]
 
-  def calendars: Seq[String] // calendars that modify this schedule
+  //The name of the optional exclusion calendar to use.
+  //NOTE: This formerly was "calendars" but that functionality has since been removed as Quartz never supported more
+  //than one calendar anyways.
+  def calendar: Option[String]
 
   /**
    * Utility method that builds a trigger
@@ -89,32 +92,22 @@ sealed trait QuartzSchedule {
    * Job association can happen separately at schedule time.
    */
   def buildTrigger(name: String): T = {
-    @tailrec
-    def addCalendars(triggerBuilder: TriggerBuilder[T], calendars: Seq[String]): TriggerBuilder[T] = {
-      if (calendars.length == 0)
-        triggerBuilder
-      else if (calendars.length == 1)
-        triggerBuilder.modifiedByCalendar(calendars.head)
-      else
-        addCalendars(triggerBuilder.modifiedByCalendar(calendars.head), calendars.tail)
-    }
-
-    val triggerBuilder = TriggerBuilder.newTrigger()
+    var triggerBuilder = TriggerBuilder.newTrigger()
                            .withIdentity(name + "_Trigger")
-                           .withDescription(description.getOrElse(null))
+                           .withDescription(description.orNull)
                            .startNow()
                            .withSchedule(schedule)
-
-    addCalendars(triggerBuilder, calendars).build()
+    triggerBuilder = calendar.map(triggerBuilder.modifiedByCalendar).getOrElse(triggerBuilder)
+    triggerBuilder.build()
   }
 
 }
 
 final class QuartzCronSchedule(val name: String,
-                               val description: Option[String],
+                               val description: Option[String] = None,
                                val expression: CronExpression,
                                val timezone: TimeZone,
-                               val calendars: Seq[String]) extends QuartzSchedule {
+                               val calendar: Option[String] = None) extends QuartzSchedule {
 
   type T = CronTrigger
 

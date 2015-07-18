@@ -23,11 +23,8 @@ sealed trait QuartzJob extends Job {
    * TODO - NotNothing check?
    **/
   protected def as[T](key: String)(implicit dataMap: JobDataMap): T = Option(dataMap.get(key)) match {
-    case Some(item) =>
-      // todo - more careful casting check?
-      item.asInstanceOf[T]
-    case None =>
-      throw new NoSuchElementException("No entry in JobDataMap for required entry '%s'".format(key))
+    case Some(item) => item.asInstanceOf[T]
+    case None => throw new NoSuchElementException("No entry in JobDataMap for required entry '%s'".format(key))
   }
 
   /**
@@ -36,12 +33,7 @@ sealed trait QuartzJob extends Job {
    *
    * TODO - NotNothing check?
    **/
-  protected def getAs[T](key: String)(implicit dataMap: JobDataMap): Option[T] = Option(dataMap.get(key)) match {
-    case Some(item) =>
-      // todo - more careful casting check?
-      Some(item.asInstanceOf[T])
-    case None => None
-  }
+  protected def getAs[T](key: String)(implicit dataMap: JobDataMap): Option[T] = Option(dataMap.get(key)).map(_.asInstanceOf[T])
 }
 
 class SimpleActorMessageJob extends Job {
@@ -56,11 +48,8 @@ class SimpleActorMessageJob extends Job {
    * TODO - NotNothing check?
    **/
   protected def as[T](key: String)(implicit dataMap: JobDataMap): T = Option(dataMap.get(key)) match {
-    case Some(item) =>
-      // todo - more careful casting check?
-      item.asInstanceOf[T]
-    case None =>
-      throw new NoSuchElementException("No entry in JobDataMap for required entry '%s'".format(key))
+    case Some(item) => item.asInstanceOf[T]
+    case None => throw new NoSuchElementException("No entry in JobDataMap for required entry '%s'".format(key))
   }
 
   /**
@@ -69,12 +58,8 @@ class SimpleActorMessageJob extends Job {
    *
    * TODO - NotNothing check?
    **/
-  protected def getAs[T](key: String)(implicit dataMap: JobDataMap): Option[T] = Option(dataMap.get(key)) match {
-    case Some(item) =>
-      // todo - more careful casting check?
-      Some(item.asInstanceOf[T])
-    case None => None
-  }
+  protected def getAs[T](key: String)(implicit dataMap: JobDataMap): Option[T] = Option(dataMap.get(key)).map(_.asInstanceOf[T])
+
   /**
    * These jobs are fundamentally ephemeral - a new Job is created
    * each time we trigger, and passed a context which contains, among
