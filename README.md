@@ -23,7 +23,7 @@ There is the ability in Quartz to pass JobDataMaps around that accrue mutable st
 we currently do NOT support that to enforce integrity, but may expose a deeper actor structure later that
 gives some ability to work around that, if need arises.
 
-Evolving, subject to change, and not curently for public consumption.
+Evolving, subject to change, and not currently for public consumption.
 
 ## Why Not Use $OtherComparableTool Instead?
 
@@ -80,7 +80,7 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 
 ```
 // For Akka 2.3.x and Scala 2.11.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.3.0-akka-2.3.x"
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.4.0-akka-2.3.x"
 ```
 
 ```
@@ -96,6 +96,8 @@ libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-a
 libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.1.x"
 // For Akka 2.2.x
 libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.2.x"
+// For Akka 2.3.x and Scala 2.10.4
+libraryDependencies += "com.typesafe.akka" % "akka-quartz-scheduler_2.10" % "1.4.0-akka-2.3.x"
 ```
 
 Note that the version name includes the akka revision (Previous releases included the akka release in the artifact name, which broken maven).
@@ -187,10 +189,13 @@ must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com
 - `description` - **[String]** *[optional]* a description of the job. *DEFAULTS TO null*. Mostly for human friendliness
 when they read your configuration aka "what this schedule is for", but set in Quartz as well for if you dump the scheduler contents
 for debug.
-- `calendars` - **[List[String]]** *[optional]* A HOCON List of Strings, which are names of configured Calendars (see below), which are applied
+- `calendar` - **[String]** *[optional]* An option String which is the name of a configured Calendar.  This Calendar is applied
 to this schedule as "exemptions" (Any times/dates falling in the Calendar will be excluded from the schedule firing - i.e.
 a Calendar that excludes all Mondays would keep a schedule configured to trigger every hour, from triggering *at all* on Mondays.
-*DEFAULTS TO **Seq.empty[String]***
+NOTE: In versions 1.3.x and prior, this property was "calendars" and supported a list of Strings.  However, Quartz, and by proxy, this library
+never actually supported multiple calendars for one schedule.  Therefore, in versions 1.4.x and beyond this property has been renamed to "calendar"
+and is an optional String.
+*DEFAULTS TO **None[String]***
 
 An example schedule called `Every30Seconds` which, aptly, fires off every 30 seconds:
 
@@ -201,7 +206,7 @@ akka {
       Every30Seconds {
         description = "A cron job that fires off every 30 seconds"
         expression = "*/30 * * ? * *"
-        calendars = ["OnlyBusinessHours"]
+        calendar = "OnlyBusinessHours"
       }
     }
   }
