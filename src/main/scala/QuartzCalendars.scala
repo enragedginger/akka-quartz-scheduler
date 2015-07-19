@@ -141,7 +141,6 @@ object QuartzCalendars {
         rawTime
     }
 
-
     val startTime = parseTimeEntry("exclude.startTime")
     val endTime = parseTimeEntry("exclude.endTime")
 
