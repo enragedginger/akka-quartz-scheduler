@@ -169,7 +169,7 @@ There are two 'primary' sub-blocks of the `akka.quartz` configuration, which are
 Schedules are our abstraction over Quartz' Job & Trigger concepts. They allow you to define a named schedule,
 which will fire a schedule event (sending a message to an actor, as specified in code) each time the Quartz trigger fires.
 
-Currently, you can only specify "Cron" schedules, which follow [Quartz' CronExpression Language](http://quartz-scheduler.org/api/2.1.0/org/quartz/CronExpression.html),
+Currently, you can only specify "Cron" schedules, which follow [Quartz' CronExpression Language](http://quartz-scheduler.org/api/2.1.7/org/quartz/CronExpression.html),
 which is designed to match the standard Unix cron syntax with a few nice additions.
 
 The schedule name in the configuration will be used to match it up with a requested job when `schedule` is invoked;
@@ -181,7 +181,7 @@ the configuration block `akka.quartz.schedules.Every30Seconds`.
 
 The entries that can be placed inside of a schedule configuration are:
 
-- `expression` - **[String]** *[required]* a valid [Quartz' CronExpression](http://quartz-scheduler.org/api/2.1.0/org/quartz/CronExpression.html),
+- `expression` - **[String]** *[required]* a valid [Quartz' CronExpression](http://quartz-scheduler.org/api/2.1.7/org/quartz/CronExpression.html),
 which describes when this job should trigger. e.g. `expression = "*/30 * * ? * *"` would fire every 30 seconds, on every date (however,
 the firing schedule created by this expression is modified by the `calendars` variable, defined below)
 - `timezone` - **[String]** *[optional]*  the timezone in which to execute the schedule, *DEFAULTS TO `akka.quartz.defaultTimezone`, WHICH DEFAULTS TO **UTC***
