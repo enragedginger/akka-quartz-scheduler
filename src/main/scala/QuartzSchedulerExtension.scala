@@ -211,12 +211,26 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
 
+
+  /**
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name A String identifying the job, which must match configuration
+    * @param receiver An ActorSelection, who will be notified each time the schedule fires
+    * @param msg A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date, which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: ActorSelection, msg: AnyRef): Date = schedules.get(name.toUpperCase) match {
+    case Some(sched) => scheduleJob(name, receiver, msg)(sched)
+    case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
+  }
+
   /**
    * Creates the actual jobs for Quartz, and setups the Trigger, etc.
    *
    * @return A date, which indicates the first time the trigger will fire.
    */
-  protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef)(schedule: QuartzSchedule): Date = {
+  protected def scheduleJob(name: String, receiver: AnyRef, msg: AnyRef)(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
     log.info("Setting up scheduled job '{}', with '{}'", name, schedule)
     val jobDataMap = Map[String, AnyRef](
