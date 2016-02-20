@@ -62,32 +62,33 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     cal.isDayExcluded(getCalendar(DECEMBER, 25, 2075)) must beTrue
   }
 
-  def parseHoliday = {
-    calendars must haveKey("Easter")
-    calendars("Easter") must haveClass[HolidayCalendar]
-    val cal = calendars("Easter").asInstanceOf[HolidayCalendar]
-    /** By "TimeIncluded" the Calendar means does this calendar include an exclusion for that time */
-    /* excludeDates = ["2013-03-31", "2014-04-20", "2015-04-05", "2016-03-27", "2017-04-16"] */
+ def parseHoliday = {
+   calendars must haveKey("Easter")
+   calendars("Easter") must haveClass[HolidayCalendar]
+   val cal = calendars("Easter").asInstanceOf[HolidayCalendar]
+   /** By "TimeIncluded" the Calendar means does this calendar include an exclusion for that time */
+   /* excludeDates = ["2013-03-31", "2014-04-20", "2015-04-05", "2016-03-27", "2017-04-16"] */
 
-    import Calendar._
+   import Calendar._
 
-    implicit val tz = cal.getTimeZone
+   implicit val tz = cal.getTimeZone
 
-    def _epoch(month: Int, day: Int, year: Int) = getCalendar(month, day, year).getTime.getTime
+   def _epoch(month: Int, day: Int, year: Int) = getCalendar(month, day, year).getTime.getTime
 
-    cal.isTimeIncluded(_epoch(MARCH, 31, 2013)) must beTrue
-    cal.isTimeIncluded(_epoch(APRIL, 20, 2014)) must beTrue
-    cal.isTimeIncluded(_epoch(APRIL, 5, 2015)) must beTrue
-    cal.isTimeIncluded(_epoch(MARCH, 27, 2016)) must beTrue
-    cal.isTimeIncluded(_epoch(APRIL, 16, 2017)) must beTrue
+   cal.isTimeIncluded(_epoch(MARCH, 31, 2013)) must beTrue
+   cal.isTimeIncluded(_epoch(APRIL, 20, 2014)) must beTrue
+   cal.isTimeIncluded(_epoch(APRIL, 5, 2015)) must beTrue
+   cal.isTimeIncluded(_epoch(MARCH, 27, 2016)) must beTrue
+   cal.isTimeIncluded(_epoch(APRIL, 16, 2017)) must beTrue
 
-    /** This test is failing, and quartz itself has no tests around Holiday calendar
-      * for me to confirm the expected behavior. For now,  Holiday Calendar should be used with great care.
-      */
-    cal.isTimeIncluded(_epoch(APRIL, 17, 2017)) must beFalse
-    cal.isTimeIncluded(_epoch(DECEMBER, 25, 20123)) must beFalse
-    cal.isTimeIncluded(_epoch(JANUARY, 2, 2023)) must beFalse
-  } pendingUntilFixed
+   /** This test is failing, and quartz itself has no tests around Holiday calendar
+     * for me to confirm the expected behavior. For now,  Holiday Calendar should be used with great care.
+     */
+   cal.isTimeIncluded(_epoch(APRIL, 17, 2017)) must beFalse
+   cal.isTimeIncluded(_epoch(DECEMBER, 25, 20123)) must beFalse
+   cal.isTimeIncluded(_epoch(JANUARY, 2, 2023)) must beFalse
+ } pendingUntilFixed
+
 
   def parseDaily = {
     calendars must haveKey("HourOfTheWolf")

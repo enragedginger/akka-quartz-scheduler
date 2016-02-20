@@ -33,7 +33,7 @@ class QuartzScheduleSpec extends Specification with ThrownExpectations { def is 
     val s = schedules("cronEvery10Seconds").asInstanceOf[QuartzCronSchedule]
 
     // build a trigger to test against
-    val _t = s.buildTrigger("parseCronScheduleTest")
+    val _t = s.buildTrigger("parseCronScheduleTest", new Date())
 
     _t must haveClass[CronTriggerImpl]
 
@@ -58,7 +58,7 @@ class QuartzScheduleSpec extends Specification with ThrownExpectations { def is 
     val s = schedules("cronEvery30Seconds").asInstanceOf[QuartzCronSchedule]
 
     // build a trigger to test against
-    val _t = s.buildTrigger("parseCronScheduleTest")
+    val _t = s.buildTrigger("parseCronScheduleTest", new Date())
 
     _t must haveClass[CronTriggerImpl]
 

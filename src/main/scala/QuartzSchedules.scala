@@ -2,6 +2,7 @@ package com.typesafe.akka.extension.quartz
 
 import com.typesafe.config.{ConfigObject, ConfigException, Config}
 import java.util.TimeZone
+import java.util.Date
 import scala.util.control.Exception._
 import org.quartz._
 import collection.immutable
@@ -91,11 +92,11 @@ sealed trait QuartzSchedule {
    * with the data this schedule contains, given a name
    * Job association can happen separately at schedule time.
    */
-  def buildTrigger(name: String): T = {
+  def buildTrigger(name: String, futureDate: Date): T = {
     var triggerBuilder = TriggerBuilder.newTrigger()
                            .withIdentity(name + "_Trigger")
                            .withDescription(description.orNull)
-                           .startNow()
+                           .startAt(futureDate)
                            .withSchedule(schedule)
     triggerBuilder = calendar.map(triggerBuilder.modifiedByCalendar).getOrElse(triggerBuilder)
     triggerBuilder.build()

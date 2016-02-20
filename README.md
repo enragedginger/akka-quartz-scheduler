@@ -117,7 +117,7 @@ to that `ActorSystem` and there will only ever be one instance of it per `ActorS
 There primary external method on the `scheduler` instance is `schedule`, used for scheduling a job:
 
 ```scala
-def schedule(name: String, receiver: ActorRef, msg: AnyRef): java.util.Date
+def schedule(name: String, receiver: ActorRef, msg: AnyRef, startDate: Date = new Date()): java.util.Date
 ```
 
 The arguments to schedule are:
@@ -125,6 +125,7 @@ The arguments to schedule are:
 - `name`: A `String` identifying the name of this schedule. This *must* match a schedule present in the configuration
 - `receiver`: An `ActorRef`, who will be sent `msg` each time the schedule fires
 - `msg`: An `AnyRef`, representing a message instance which will be sent to `receiver` each time the schedule fires
+- `startDate`: An optional `Date`, for postponed start of a job. Defaults to now. 
 
 Invoking `schedule` returns an instance of `java.util.Date`, representing the first time the newly setup schedule
 will fire.

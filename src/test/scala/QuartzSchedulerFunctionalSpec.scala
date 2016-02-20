@@ -1,6 +1,8 @@
 package com.typesafe.akka.extension.quartz
 package test
 
+import java.util.{Calendar, Date}
+
 import akka.japi.Option.Some
 import org.junit.runner.RunWith
 import com.typesafe.config.ConfigFactory
@@ -54,6 +56,29 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
       receipt must contain(Tock)
       receipt must have size(5)
+
+    }
+
+    "Delayed Setup & Execute a Cron Job" in {
+      val now = Calendar.getInstance()
+      val t= now.getTimeInMillis()
+      val after23s =new Date(t + (23 * 1000))
+
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery5Seconds", receiver, Tick, after23s)
+
+
+      /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+      val receipt = probe.receiveWhile(Duration(60, SECONDS), Duration(60, SECONDS), 12) {
+        case Tock =>
+          Tock
+      }
+
+
+      receipt must contain(Tock)
+      receipt must have size(8)
 
     }
   }
@@ -131,6 +156,10 @@ object SchedulingFunctionalTest {
           cronEvery10Seconds {
             description = "A cron job that fires off every 10 seconds"
             expression = "*/10 * * ? * *"
+          }
+          cronEvery5Seconds {
+            description = "A cron job that fires off every 5 seconds"
+            expression = "*/5 * * ? * *"
           }
         }
         calendars {

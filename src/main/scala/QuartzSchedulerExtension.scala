@@ -206,8 +206,8 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * @param msg A message object, which will be sent to `receiver` each time the schedule fires
    * @return A date, which indicates the first time the trigger will fire.
    */
-  def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = schedules.get(name.toUpperCase) match {
-    case Some(sched) => scheduleJob(name, receiver, msg)(sched)
+  def schedule(name: String, receiver: ActorRef, msg: AnyRef, startDate: Date = new Date()): Date = schedules.get(name.toUpperCase) match {
+    case Some(sched) => scheduleJob(name, receiver, msg, startDate)(sched)
     case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
 
@@ -216,7 +216,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    *
    * @return A date, which indicates the first time the trigger will fire.
    */
-  protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef)(schedule: QuartzSchedule): Date = {
+  protected def scheduleJob(name: String, receiver: ActorRef, msg: AnyRef, startDate: Date)(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
     log.info("Setting up scheduled job '{}', with '{}'", name, schedule)
     val jobDataMap = Map[String, AnyRef](
@@ -237,7 +237,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     runningJobs += name -> job.getKey
 
     log.debug("Building Trigger.")
-    val trigger = schedule.buildTrigger(name)
+    val trigger = schedule.buildTrigger(name,startDate)
 
     log.debug("Scheduling Job '{}' and Trigger '{}'. Is Scheduler Running? {}", job, trigger, scheduler.isStarted)
     scheduler.scheduleJob(job, trigger)
