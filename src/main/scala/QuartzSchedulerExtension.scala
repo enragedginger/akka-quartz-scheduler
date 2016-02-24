@@ -199,6 +199,14 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
+   * Remove a job's schedule to allow for rescheduling
+   *
+   * @param name A String identifying the job
+   */
+
+  def removeSchedule(name: String) = schedules = schedules - name
+
+  /**
    * Schedule a job, whose named configuration must be available
    *
    * @param name A String identifying the job, which must match configuration
