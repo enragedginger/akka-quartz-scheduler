@@ -24,7 +24,7 @@ object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension] {
  *
  */
 class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
-  
+
   private val log = Logging(system, this)
 
 
@@ -216,6 +216,14 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
       val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
       schedules += (name.toUpperCase -> quartzSchedule)
   }
+
+  /**
+   * Remove a job's schedule to allow for rescheduling
+   *
+   * @param name A String identifying the job
+   */
+
+  def removeSchedule(name: String) = schedules = schedules - name
 
   /**
     * Schedule a job, whose named configuration must be available
