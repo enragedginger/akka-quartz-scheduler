@@ -2,7 +2,7 @@ package com.typesafe.akka.extension.quartz
 
 import org.quartz.{JobExecutionException, JobDataMap, JobExecutionContext, Job}
 import akka.event.{LoggingBus, Logging}
-import akka.actor.ActorRef
+import akka.actor.{ActorSelection, ActorRef}
 
 /**
  * Base trait, in case we decide to diversify down the road
@@ -74,7 +74,7 @@ class SimpleActorMessageJob extends Job {
 
     try {
       val logBus = as[LoggingBus]("logBus")
-      val receiver = as[ActorRef]("receiver")
+      val receiver = as[AnyRef]("receiver")
 
       /**
        * Message is an instance, essentially static, not a class to be instantiated.
@@ -84,7 +84,11 @@ class SimpleActorMessageJob extends Job {
       val msg = dataMap.get("message")
       val log = Logging(logBus, this)
       log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
-      receiver ! msg
+      receiver match {
+        case ref: ActorRef => ref ! msg
+        case selection: ActorSelection => selection ! msg
+        case _ => throw new JobExecutionException("receiver as not expected type, must be ActorRef or ActorSelection, was %s".format(receiver.getClass))
+      }
     } catch {
       // All exceptions thrown from a job, including Runtime, must be wrapped in a JobExcecutionException or Quartz ignores it
       case jee: JobExecutionException => throw jee
