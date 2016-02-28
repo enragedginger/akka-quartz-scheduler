@@ -92,12 +92,18 @@ sealed trait QuartzSchedule {
    * with the data this schedule contains, given a name
    * Job association can happen separately at schedule time.
    */
-  def buildTrigger(name: String, futureDate: Date): T = {
-    var triggerBuilder = TriggerBuilder.newTrigger()
+  def buildTrigger(name: String, futureDate: Option[Date]): T = {
+    val partialTriggerBuilder = TriggerBuilder.newTrigger()
                            .withIdentity(name + "_Trigger")
                            .withDescription(description.orNull)
-                           .startAt(futureDate)
                            .withSchedule(schedule)
+                           
+    var triggerBuilder = futureDate match {
+      case Some(fd) => partialTriggerBuilder.startAt(fd)
+      case None => partialTriggerBuilder.startNow()
+    }
+    
+
     triggerBuilder = calendar.map(triggerBuilder.modifiedByCalendar).getOrElse(triggerBuilder)
     triggerBuilder.build()
   }

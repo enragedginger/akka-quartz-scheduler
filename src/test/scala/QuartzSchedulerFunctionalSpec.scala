@@ -59,26 +59,44 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
     }
 
-    "Delayed Setup & Execute a Cron Job" in {
-      val now = Calendar.getInstance()
-      val t= now.getTimeInMillis()
-      val after23s =new Date(t + (23 * 1000))
+   "Delayed Setup & Execute a Cron Job" in {
+    val now = Calendar.getInstance()
+    val t = now.getTimeInMillis()
+    val after23s = new Date(t + (23 * 1000))
 
+    val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+    val probe = TestProbe()
+    receiver ! NewProbe(probe.ref)
+    val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery15Seconds", receiver, Tick, Some(after23s))
+
+
+    /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+    val receipt = probe.receiveWhile(Duration(60, SECONDS), Duration(60, SECONDS), 4) {
+      case Tock =>
+        Tock
+
+    }
+    receipt must contain(Tock)
+    receipt must have size(3)
+
+  }
+
+    "Properly Setup & Execute a Cron Job with ActorSelection as receiver" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
       val probe = TestProbe()
       receiver ! NewProbe(probe.ref)
-      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery5Seconds", receiver, Tick, after23s)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery5Seconds", _system.actorSelection(receiver.path), Tick)
 
 
       /* This is a somewhat questionable test as the timing between components may not match the tick off. */
-      val receipt = probe.receiveWhile(Duration(60, SECONDS), Duration(60, SECONDS), 12) {
+      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
         case Tock =>
           Tock
       }
 
 
       receipt must contain(Tock)
-      receipt must have size(8)
+      receipt must have size(5)
 
     }
   }
@@ -152,6 +170,10 @@ object SchedulingFunctionalTest {
           cronEvery30Seconds {
             description = "A cron job that fires off every 30 seconds"
             expression = "*/30 * * ? * *"
+          }
+          cronEvery15Seconds {
+            description = "A cron job that fires off every 15 seconds"
+            expression = "*/15 * * ? * *"
           }
           cronEvery10Seconds {
             description = "A cron job that fires off every 10 seconds"
