@@ -77,7 +77,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
     }
     receipt must contain(Tock)
-    receipt must have size(3)
+    receipt must have size(2)
 
   }
 
