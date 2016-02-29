@@ -99,7 +99,9 @@ sealed trait QuartzSchedule {
                            .withSchedule(schedule)
                            
     var triggerBuilder = futureDate match {
-      case Some(fd) => partialTriggerBuilder.startAt(fd)
+      case Some(fd) =>
+        println(s"Building trigger with futureDate: $fd")
+        partialTriggerBuilder.startAt(fd)
       case None => partialTriggerBuilder.startNow()
     }
     
