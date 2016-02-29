@@ -2,7 +2,7 @@ name := "akka-quartz-scheduler"
 
 organization := "com.enragedginger"
 
-version := "1.4.1-akka-2.3.x"
+version := "1.5.0-akka-2.3.x"
 
 scalaVersion := "2.11.6"
 
