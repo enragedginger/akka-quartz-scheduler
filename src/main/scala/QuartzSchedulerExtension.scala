@@ -31,7 +31,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
   protected val config = system.settings.config.withFallback(defaultConfig).getConfig("akka.quartz").root.toConfig
 
- // For config values that can be omitted by user, to setup a fallback
+  // For config values that can be omitted by user, to setup a fallback
   lazy val defaultConfig =  ConfigFactory.parseString("""
     akka.quartz {
       threadPool {
@@ -41,14 +41,14 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
       }
       defaultTimezone = UTC
     }
-    """.stripMargin)  // todo - boundary checks
+                                                      """.stripMargin)  // todo - boundary checks
 
   // The # of threads in the pool
   val threadCount = config.getInt("threadPool.threadCount")
   // Priority of threads created. Defaults at 5, can be between 1 (lowest) and 10 (highest)
   val threadPriority = config.getInt("threadPool.threadPriority")
   require(threadPriority >= 1 && threadPriority <= 10,
-          "Quartz Thread Priority (akka.quartz.threadPool.threadPriority) must be a positive integer between 1 (lowest) and 10 (highest).")
+    "Quartz Thread Priority (akka.quartz.threadPool.threadPriority) must be a positive integer between 1 (lowest) and 10 (highest).")
   // Should the threads we create be daemonic? FYI Non-daemonic threads could make akka / jvm shutdown difficult
   val daemonThreads_? = config.getBoolean("threadPool.daemonThreads")
   // Timezone to use unless specified otherwise
@@ -81,11 +81,12 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   def isInStandbyMode = scheduler.isInStandbyMode
 
   /**
-   * Starts up the scheduler. This is typically used from userspace only to restart
-   * a scheduler in standby mode.
-   * @return True if calling this function resulted in the starting of the scheduler; false if the scheduler
-   *         was already started.
-   */
+    * Starts up the scheduler. This is typically used from userspace only to restart
+    * a scheduler in standby mode.
+    *
+    * @return True if calling this function resulted in the starting of the scheduler; false if the scheduler
+    *         was already started.
+    */
   def start(): Boolean = isStarted match {
     case true =>
       log.warning("Cannot start scheduler, already started.")
@@ -105,18 +106,20 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-   * Shutdown the scheduler manually. The scheduler cannot be re-started.
-   * @param waitForJobsToComplete wait for jobs to complete? default to false
-   */
+    * Shutdown the scheduler manually. The scheduler cannot be re-started.
+    *
+    * @param waitForJobsToComplete wait for jobs to complete? default to false
+    */
   def shutdown(waitForJobsToComplete: Boolean = false) = {
     scheduler.shutdown(waitForJobsToComplete)
   }
 
   /**
-   * Attempts to suspend (pause) the given job
-   * @param name The name of the job, as defined in the schedule
-   * @return Success or Failure in a Boolean
-   */
+    * Attempts to suspend (pause) the given job
+    *
+    * @param name The name of the job, as defined in the schedule
+    * @return Success or Failure in a Boolean
+    */
   def suspendJob(name: String): Boolean = {
     runningJobs.get(name) match {
       case Some(job) =>
@@ -131,10 +134,11 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-   * Attempts to resume (un-pause) the given job
-   * @param name The name of the job, as defined in the schedule
-   * @return Success or Failure in a Boolean
-   */
+    * Attempts to resume (un-pause) the given job
+    *
+    * @param name The name of the job, as defined in the schedule
+    * @return Success or Failure in a Boolean
+    */
   def resumeJob(name: String): Boolean = {
     runningJobs.get(name) match {
       case Some(job) =>
@@ -157,10 +161,11 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-   * Cancels the running job and all associated triggers
-   * @param name The name of the job, as defined in the schedule
-   * @return Success or Failure in a Boolean
-   */
+    * Cancels the running job and all associated triggers
+    *
+    * @param name The name of the job, as defined in the schedule
+    * @return Success or Failure in a Boolean
+    */
   def cancelJob(name: String): Boolean = {
     runningJobs.get(name) match {
       case Some(job) =>
@@ -199,38 +204,67 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-   * Schedule a job, whose named configuration must be available
-   *
-   * @param name A String identifying the job, which must match configuration
-   * @param receiver An ActorRef, who will be notified each time the schedule fires
-   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
-   * @return A date, which indicates the first time the trigger will fire.
-   */
-  def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = schedules.get(name.toUpperCase) match {
-    case Some(sched) => scheduleJob(name, receiver, msg)(sched)
-    case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
-  }
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An ActorRef, who will be notified each time the schedule fires
+    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = scheduleInternal(name, receiver, msg, None)
 
 
   /**
     * Schedule a job, whose named configuration must be available
     *
-    * @param name A String identifying the job, which must match configuration
+    * @param name     A String identifying the job, which must match configuration
     * @param receiver An ActorSelection, who will be notified each time the schedule fires
-    * @param msg A message object, which will be sent to `receiver` each time the schedule fires
-    * @return A date, which indicates the first time the trigger will fire.
+    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
     */
-  def schedule(name: String, receiver: ActorSelection, msg: AnyRef): Date = schedules.get(name.toUpperCase) match {
-    case Some(sched) => scheduleJob(name, receiver, msg)(sched)
+  def schedule(name: String, receiver: ActorSelection, msg: AnyRef): Date = scheduleInternal(name, receiver, msg, None)
+
+  /**
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An ActorRef, who will be notified each time the schedule fires
+    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: ActorRef, msg: AnyRef, startDate: Option[Date]): Date = scheduleInternal(name, receiver, msg, startDate)
+
+
+  /**
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An ActorSelection, who will be notified each time the schedule fires
+    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: ActorSelection, msg: AnyRef, startDate: Option[Date]): Date = scheduleInternal(name, receiver, msg, startDate)
+
+  /**
+    * Helper method for schedule because overloaded methods can't have default parameters.
+    * @param name The name of the schedule / job.
+    * @param receiver The receiver of the job message. This must be either an ActorRef or an ActorSelection.
+    * @param msg The message to send to kick off the job.
+    * @param startDate The optional date indicating the earliest time the job may fire.
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  private def scheduleInternal(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = schedules.get(name.toUpperCase) match {
+    case Some(schedule) => scheduleJob(name, receiver, msg, startDate)(schedule)
     case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
+
 
   /**
    * Creates the actual jobs for Quartz, and setups the Trigger, etc.
    *
    * @return A date, which indicates the first time the trigger will fire.
    */
-  protected def scheduleJob(name: String, receiver: AnyRef, msg: AnyRef)(schedule: QuartzSchedule): Date = {
+  protected def scheduleJob(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date])(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
     log.info("Setting up scheduled job '{}', with '{}'", name, schedule)
     val jobDataMap = Map[String, AnyRef](
@@ -241,17 +275,17 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
     val jobData = JobDataMapSupport.newJobDataMap(jobDataMap.asJava)
     val job = JobBuilder.newJob(classOf[SimpleActorMessageJob])
-                        .withIdentity(name + "_Job")
-                        .usingJobData(jobData)
-                        .withDescription(schedule.description.orNull)
-                        .build()
+      .withIdentity(name + "_Job")
+      .usingJobData(jobData)
+      .withDescription(schedule.description.orNull)
+      .build()
 
     log.debug("Adding jobKey {} to runningJobs map.", job.getKey)
 
     runningJobs += name -> job.getKey
 
-    log.debug("Building Trigger.")
-    val trigger = schedule.buildTrigger(name)
+    log.debug("Building Trigger with startDate '{}", startDate.getOrElse(new Date()))
+    val trigger = schedule.buildTrigger(name, startDate)
 
     log.debug("Scheduling Job '{}' and Trigger '{}'. Is Scheduler Running? {}", job, trigger, scheduler.isStarted)
     scheduler.scheduleJob(job, trigger)
@@ -287,7 +321,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   lazy protected val scheduler = {
     // because it's a java API ... initialize the scheduler, THEN get and start it.
     DirectSchedulerFactory.getInstance.createScheduler(schedulerName, system.name, /* todo - will this clash by quartz' rules? */
-                                                       threadPool, jobStore)
+      threadPool, jobStore)
 
     val scheduler = DirectSchedulerFactory.getInstance().getScheduler(schedulerName)
 
@@ -302,8 +336,3 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
 }
-
-
-
-
-

@@ -2,6 +2,7 @@ package com.typesafe.akka.extension.quartz
 
 import com.typesafe.config.{ConfigObject, ConfigException, Config}
 import java.util.TimeZone
+import java.util.Date
 import scala.util.control.Exception._
 import org.quartz._
 import collection.immutable
@@ -87,16 +88,24 @@ sealed trait QuartzSchedule {
   def calendar: Option[String]
 
   /**
-   * Utility method that builds a trigger
-   * with the data this schedule contains, given a name
-   * Job association can happen separately at schedule time.
-   */
-  def buildTrigger(name: String): T = {
-    var triggerBuilder = TriggerBuilder.newTrigger()
+    * Utility method that builds a trigger with the data this schedule contains, given a name.
+    * Job association can happen separately at schedule time.
+    *
+    * @param name The name of the job / schedule.
+    * @param futureDate The Optional earliest date at which the job may fire.
+    * @return The new trigger instance.
+    */
+  def buildTrigger(name: String, futureDate: Option[Date] = None): T = {
+    val partialTriggerBuilder = TriggerBuilder.newTrigger()
                            .withIdentity(name + "_Trigger")
                            .withDescription(description.orNull)
-                           .startNow()
                            .withSchedule(schedule)
+                           
+    var triggerBuilder = futureDate match {
+      case Some(fd) => partialTriggerBuilder.startAt(fd)
+      case None => partialTriggerBuilder.startNow()
+    }
+
     triggerBuilder = calendar.map(triggerBuilder.modifiedByCalendar).getOrElse(triggerBuilder)
     triggerBuilder.build()
   }

@@ -14,7 +14,7 @@ Rather, we utilize the concepts of Quartz' scheduling system to provide a more r
 to Akka than the one already available.
 
 The goal here is to provide Akka with a scheduling system that is closer to what one would expect for Cron type jobs –
-setup long-running ActorSystems that can have certain events kick off by Quartz.
+set up long-running ActorSystems that can have certain events kicked off by Quartz.
 
 There aren't currently any plans on having anything to do with the distributed transaction, persistence,
 clustering or any other nonsense anytime soon. This is for cron-ey type timing and scheduling.
@@ -22,8 +22,6 @@ clustering or any other nonsense anytime soon. This is for cron-ey type timing a
 There is the ability in Quartz to pass JobDataMaps around that accrue mutable state across job ticks;
 we currently do NOT support that to enforce integrity, but may expose a deeper actor structure later that
 gives some ability to work around that, if need arises.
-
-Evolving, subject to change, and not currently for public consumption.
 
 ## Why Not Use $OtherComparableTool Instead?
 
@@ -34,35 +32,35 @@ Evolving, subject to change, and not currently for public consumption.
     The Akka Scheduler is designed to setup events that happen based on durations from the current moment:
     You can say "fire this job in 15 minutes, every 30 minutes thereafter" but not "fire a job every day at 3pm".
 
-    Further, Akka's default scheduler also is executed around a [`HashedWheelTimer`](http://docs.jboss.org/netty/3.1/api/org/jboss/netty/util/HashedWheelTimer.html) –
+    Furthermore, Akka's default scheduler is executed around a [`HashedWheelTimer`](http://docs.jboss.org/netty/3.1/api/org/jboss/netty/util/HashedWheelTimer.html) –
     a potential precision loss for jobs, as it does not provide strong guarantees on the timeliness of execution.
 
 2. Why not just use the Quartz component in [Akka's Camel Extension](http://doc.akka.io/docs/akka/2.1.2/scala/camel.html)?
 
     1. To begin with, Akka's Camel extension was *not* available in Akka 2.0.x, only in 2.1+
-    2. Camel brings with it a whole architecture change (`Consumers`, `Producers`, etc) and is not exactly "lightweight" to plug in, if all you want is Quartz support
-    3. We wanted to bring the scheduling concept of Quartz into Akka as cleanly as possible with native configuration integration and a lightweight feel
+    2. Camel brings with it a whole architecture change (`Consumers`, `Producers`, etc) and is not exactly "lightweight" to plug in if all you want is Quartz support.
+    3. We wanted to bring the scheduling concept of Quartz into Akka as cleanly as possible with native configuration integration and a lightweight feel.
 
 3. What about that other `akka-quartz` component up on GitHub?
 
     The interface to this aforementioned `akka-quartz` component is via Actors - one creates an instance of an Actor that 
     has its own Quartz Scheduler underneath it, and sends messages to that Actor to schedule jobs. Because it is an Actor
     which provides no "Singleton"-like guarantee, it becomes too easy for users to accidentally spin up multiple scheduler
-    instances, each of which is backed by its  own threadpool.
+    instances, each of which is backed by its own threadpool.
     Instead, with `akka-quartz-scheduler` we use Akka's Extension system which provides
     a plugin model – we guarantee only one Quartz Scheduler is *ever* spun up per `ActorSystem`. This means
     we will never create anything but one single Thread Pool which you have control over the size of, for
     any given `ActorSystem`.
 
 Finally, a common failure of the above listed alternatives is that configuration of things like a repeating schedule
-should be separated from code: in a configuration file which an operations team (not the developers) can have
-control. Thus, `akka-quartz-scheduler` allows only allows specifiyng in code: the name of a job, what actor to send
+should be separated from code in a configuration file which an operations team (not the developers) can
+control. Thus, `akka-quartz-scheduler` only allows specifying the following in code: the name of a job, what actor to send
 the tick to, and the message to send on a tick. The configuration of how frequently to 'tick' on a schedule is
 externalised to the Akka configuration file; when a schedule request is made its name is matched up with an entry
 in the config which specifies the rules the actual scheduling should follow.
 
-Thus, Development can outline the skeleton of repeating jobs in their code, specifying only what to do WHEN a 'tick' of
-the schedule fires. Then, Operations has complete control over how often a job runs and what rules it follows to determine
+Thus, development can outline the skeleton of repeating jobs in their code, specifying only what to do WHEN a 'tick' of
+the schedule fires. Then, operations has complete control over how often a job runs and what rules it follows to determine
 the schedule of firing.
 
 This, among other things, prevents accidental mistakes such as changing a schedule in development for testing. A
@@ -72,7 +70,6 @@ change of that sort is fixable without Operations needing to require a recompila
 - investigate supporting listeners, with actor hookarounds.
 - misfires and recovery model - play nice with supervision, deathwatch, etc
   [docs page 23 - very close to supervision strategy]
-- allow specification of delayed start time
 
 ## Usage
 
@@ -80,7 +77,7 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 
 ```
 // For Akka 2.3.x and Scala 2.11.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.4.0-akka-2.3.x"
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.5.0-akka-2.3.x"
 ```
 
 ```
@@ -100,31 +97,36 @@ libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-a
 libraryDependencies += "com.typesafe.akka" % "akka-quartz-scheduler_2.10" % "1.4.0-akka-2.3.x"
 ```
 
-Note that the version name includes the akka revision (Previous releases included the akka release in the artifact name, which broken maven).
+Note that the version name includes the Akka revision (Previous releases included the Akka release in the artifact name, which broken Maven).
 
 Then, from within your Akka project you can create and access a Scheduler:
 
 ```scala
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
 
-val scheduler = QuartzSchedulerExtension(_system)
+val scheduler = QuartzSchedulerExtension(system)
 
 ```
 
-Where `_system` represents an instance of an Akka `ActorSystem` – note that `QuartzSchedulerExtension` is scoped
+Where `system` represents an instance of an Akka `ActorSystem` – note that `QuartzSchedulerExtension` is scoped
 to that `ActorSystem` and there will only ever be one instance of it per `ActorSystem`.
 
-There primary external method on the `scheduler` instance is `schedule`, used for scheduling a job:
+The primary external method on the `scheduler` instance is `schedule`, used for scheduling a job:
 
 ```scala
-def schedule(name: String, receiver: ActorRef, msg: AnyRef): java.util.Date
+def schedule(name: String, receiver: ActorRef, msg: AnyRef, startDate: Option[Date]): java.util.Date
+```
+OR
+```scala
+def schedule(name: String, receiver: ActorSelection, msg: AnyRef, startDate: Option[Date]): java.util.Date
 ```
 
 The arguments to schedule are:
 
 - `name`: A `String` identifying the name of this schedule. This *must* match a schedule present in the configuration
-- `receiver`: An `ActorRef`, who will be sent `msg` each time the schedule fires
+- `receiver`: An `ActorRef` or `ActorSelection`, who will be sent `msg` each time the schedule fires
 - `msg`: An `AnyRef`, representing a message instance which will be sent to `receiver` each time the schedule fires
+- `startDate`: An optional `Date`, for postponed start of a job. Defaults to now. 
 
 Invoking `schedule` returns an instance of `java.util.Date`, representing the first time the newly setup schedule
 will fire.
@@ -136,20 +138,20 @@ Here is an example, using a schedule called `Every30Seconds`, which sends a `Tic
 ```scala
 case object Tick
 
-val cleaner = _system.actorOf(Props[CleanupActor])
+val cleaner = system.actorOf(Props[CleanupActor])
 
-QuartzSchedulerExtension(_system).schedule("Every30Seconds", cleaner, Tick)
+QuartzSchedulerExtension(system).schedule("Every30Seconds", cleaner, Tick)
 ```
 
 Where the `Tick` message is handled normally inside the Actor's message loop. If one wanted to ensure that schedule
-messages were dealt with more immediately than "normal" actor messages, they could utilize [Priority Mailboxes](http://doc.akka.io/docs/akka/2.0.5/scala/dispatchers.html).
+messages were dealt with more immediately than "normal" actor messages, they could utilize [Priority Mailboxes](http://doc.akka.io/docs/akka/2.4.1/scala/dispatchers.html).
 
 The details on the configuration of a job is outlined below in the section '*Schedule Configuration*'.
 
 
 ### Configuration of Quartz Scheduler
 
-All configuration of `akka-quartz-scheduler` is done inside of the akka configuration file in an `akka.quartz` config
+All configuration of `akka-quartz-scheduler` is done inside of the Akka configuration file in an `akka.quartz` config
 block. Like Akka's configuration file, this follows the [HOCON Configuration Format](https://github.com/typesafehub/config/blob/master/HOCON.md).
 Thus, any entries specified as `foo.bar.baz = x` can also be expressed as `foo { bar { baz = x } }`.
 
@@ -176,7 +178,7 @@ The schedule name in the configuration will be used to match it up with a reques
 case does not matter as the "Is there a matching job?" configuration lookup is case insensitive.
 
 The configuration block for schedules is in `akka.quartz.schedules`, with sub-entries being specified inside of a named
-block, such that the configuration for a schedule named `Every30Seconds` would have it's configuration values specified inside
+block, such that the configuration for a schedule named `Every30Seconds` would have its configuration values specified inside
 the configuration block `akka.quartz.schedules.Every30Seconds`.
 
 The entries that can be placed inside of a schedule configuration are:
