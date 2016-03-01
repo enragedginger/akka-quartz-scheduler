@@ -81,11 +81,12 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   def isInStandbyMode = scheduler.isInStandbyMode
 
   /**
-   * Starts up the scheduler. This is typically used from userspace only to restart
-   * a scheduler in standby mode.
-   * @return True if calling this function resulted in the starting of the scheduler; false if the scheduler
-   *         was already started.
-   */
+    * Starts up the scheduler. This is typically used from userspace only to restart
+    * a scheduler in standby mode.
+    *
+    * @return True if calling this function resulted in the starting of the scheduler; false if the scheduler
+    *         was already started.
+    */
   def start(): Boolean = isStarted match {
     case true =>
       log.warning("Cannot start scheduler, already started.")
@@ -105,18 +106,20 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-   * Shutdown the scheduler manually. The scheduler cannot be re-started.
-   * @param waitForJobsToComplete wait for jobs to complete? default to false
-   */
+    * Shutdown the scheduler manually. The scheduler cannot be re-started.
+    *
+    * @param waitForJobsToComplete wait for jobs to complete? default to false
+    */
   def shutdown(waitForJobsToComplete: Boolean = false) = {
     scheduler.shutdown(waitForJobsToComplete)
   }
 
   /**
-   * Attempts to suspend (pause) the given job
-   * @param name The name of the job, as defined in the schedule
-   * @return Success or Failure in a Boolean
-   */
+    * Attempts to suspend (pause) the given job
+    *
+    * @param name The name of the job, as defined in the schedule
+    * @return Success or Failure in a Boolean
+    */
   def suspendJob(name: String): Boolean = {
     runningJobs.get(name) match {
       case Some(job) =>
@@ -131,10 +134,11 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-   * Attempts to resume (un-pause) the given job
-   * @param name The name of the job, as defined in the schedule
-   * @return Success or Failure in a Boolean
-   */
+    * Attempts to resume (un-pause) the given job
+    *
+    * @param name The name of the job, as defined in the schedule
+    * @return Success or Failure in a Boolean
+    */
   def resumeJob(name: String): Boolean = {
     runningJobs.get(name) match {
       case Some(job) =>
@@ -157,10 +161,11 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-   * Cancels the running job and all associated triggers
-   * @param name The name of the job, as defined in the schedule
-   * @return Success or Failure in a Boolean
-   */
+    * Cancels the running job and all associated triggers
+    *
+    * @param name The name of the job, as defined in the schedule
+    * @return Success or Failure in a Boolean
+    */
   def cancelJob(name: String): Boolean = {
     runningJobs.get(name) match {
       case Some(job) =>
@@ -199,51 +204,57 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-   * Schedule a job, whose named configuration must be available
-   *
-   * @param name A String identifying the job, which must match configuration
-   * @param receiver An ActorRef, who will be notified each time the schedule fires
-   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
-   * @return A date, which indicates the first time the trigger will fire.
-   */
-  def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = jobscheduler(name,receiver,msg,None)
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An ActorRef, who will be notified each time the schedule fires
+    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = scheduleInternal(name, receiver, msg, None)
 
 
   /**
-   * Schedule a job, whose named configuration must be available
-   *
-   * @param name A String identifying the job, which must match configuration
-   * @param receiver An ActorSelection, who will be notified each time the schedule fires
-   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
-   * @return A date, which indicates the first time the trigger will fire.
-   */
-  def schedule(name: String, receiver: ActorSelection, msg: AnyRef): Date = jobscheduler(name,receiver,msg,None)
-  /**
-   * Schedule a job, whose named configuration must be available
-   *
-   * @param name A String identifying the job, which must match configuration
-   * @param receiver An ActorRef, who will be notified each time the schedule fires
-   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
-   * @return A date, which indicates the first time the trigger will fire.
-   */
-  def schedule(name: String, receiver: ActorRef, msg: AnyRef, startDate: Option[Date]): Date = jobscheduler(name,receiver,msg,startDate)
-
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An ActorSelection, who will be notified each time the schedule fires
+    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: ActorSelection, msg: AnyRef): Date = scheduleInternal(name, receiver, msg, None)
 
   /**
-   * Schedule a job, whose named configuration must be available
-   *
-   * @param name A String identifying the job, which must match configuration
-   * @param receiver An ActorSelection, who will be notified each time the schedule fires
-   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
-   * @return A date, which indicates the first time the trigger will fire.
-   */
-  def schedule(name: String, receiver: ActorSelection, msg: AnyRef, startDate: Option[Date]): Date = jobscheduler(name,receiver,msg,startDate)
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An ActorRef, who will be notified each time the schedule fires
+    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: ActorRef, msg: AnyRef, startDate: Option[Date]): Date = scheduleInternal(name, receiver, msg, startDate)
 
-  /*
-   * Helper method for schedule because overloaded methods can't have default parameters. 
-   */
-  private def jobscheduler(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = schedules.get(name.toUpperCase) match {
-    case Some(sched) => scheduleJob(name, receiver, msg, startDate)(sched)
+
+  /**
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An ActorSelection, who will be notified each time the schedule fires
+    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: ActorSelection, msg: AnyRef, startDate: Option[Date]): Date = scheduleInternal(name, receiver, msg, startDate)
+
+  /**
+    * Helper method for schedule because overloaded methods can't have default parameters.
+    * @param name The name of the schedule / job.
+    * @param receiver The receiver of the job message. This must be either an ActorRef or an ActorSelection.
+    * @param msg The message to send to kick off the job.
+    * @param startDate The optional date indicating the earliest time the job may fire.
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  private def scheduleInternal(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = schedules.get(name.toUpperCase) match {
+    case Some(schedule) => scheduleJob(name, receiver, msg, startDate)(schedule)
     case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
 

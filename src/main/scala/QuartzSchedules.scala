@@ -88,23 +88,23 @@ sealed trait QuartzSchedule {
   def calendar: Option[String]
 
   /**
-   * Utility method that builds a trigger
-   * with the data this schedule contains, given a name
-   * Job association can happen separately at schedule time.
-   */
-  def buildTrigger(name: String, futureDate: Option[Date]): T = {
+    * Utility method that builds a trigger with the data this schedule contains, given a name.
+    * Job association can happen separately at schedule time.
+    *
+    * @param name The name of the job / schedule.
+    * @param futureDate The Optional earliest date at which the job may fire.
+    * @return The new trigger instance.
+    */
+  def buildTrigger(name: String, futureDate: Option[Date] = None): T = {
     val partialTriggerBuilder = TriggerBuilder.newTrigger()
                            .withIdentity(name + "_Trigger")
                            .withDescription(description.orNull)
                            .withSchedule(schedule)
                            
     var triggerBuilder = futureDate match {
-      case Some(fd) =>
-        println(s"Building trigger with futureDate: $fd")
-        partialTriggerBuilder.startAt(fd)
+      case Some(fd) => partialTriggerBuilder.startAt(fd)
       case None => partialTriggerBuilder.startNow()
     }
-    
 
     triggerBuilder = calendar.map(triggerBuilder.modifiedByCalendar).getOrElse(triggerBuilder)
     triggerBuilder.build()
