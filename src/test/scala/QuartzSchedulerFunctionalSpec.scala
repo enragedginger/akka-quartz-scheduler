@@ -68,7 +68,6 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       receiver ! NewProbe(probe.ref)
       val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery15Seconds", receiver, Tick, Some(after65s))
 
-
       /* This is a somewhat questionable test as the timing between components may not match the tick off. */
       val receipt = probe.receiveWhile(Duration(30, SECONDS), Duration(30, SECONDS), 2) {
         case Tock =>
@@ -92,8 +91,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       scheduleCalender.add(Calendar.SECOND, secs)
 
       //Dates must be equal in seconds
-      Math.floor(jobCalender.getTimeInMillis / 1000) mustEqual Math.floor(scheduleCalender.getTimeInMillis / 1000)
-
+      Math.floor(jobCalender.getTimeInMillis / 1000).toLong mustEqual Math.floor(scheduleCalender.getTimeInMillis / 1000).toLong
     }
 
     "Properly Setup & Execute a Cron Job with ActorSelection as receiver" in {
