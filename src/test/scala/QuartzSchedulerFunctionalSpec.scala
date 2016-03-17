@@ -12,13 +12,15 @@ import scala.concurrent.duration._
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
 import org.scalatest.MustMatchers
+import org.scalatest.Matchers
 
 
 @RunWith(classOf[JUnitRunner])
 class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_system: ActorSystem)
   with ImplicitSender
   with WordSpecLike
-  with MustMatchers with BeforeAndAfterAll {
+  with MustMatchers
+  with BeforeAndAfterAll {
 
   override def afterAll {
     system.shutdown()
@@ -100,17 +102,25 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       receiver ! NewProbe(probe.ref)
       val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery5Seconds", _system.actorSelection(receiver.path), Tick)
 
-
       /* This is a somewhat questionable test as the timing between components may not match the tick off. */
       val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
         case Tock =>
           Tock
       }
 
-
       receipt must contain(Tock)
       receipt must have size(5)
 
+    }
+
+    "Get next trigger date by schedule name" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEveryMidnight", _system.actorSelection(receiver.path), Tick)
+      val nextRun = QuartzSchedulerExtension(_system).nextTrigger("cronEveryMidnight")
+
+      assert(nextRun.getOrElse(new java.util.Date()) ==jobDt)
     }
   }
 
@@ -195,6 +205,10 @@ object SchedulingFunctionalTest {
           cronEvery5Seconds {
             description = "A cron job that fires off every 5 seconds"
             expression = "*/5 * * ? * *"
+          }
+          cronEveryMidnight {
+            description = "A cron job that fires off every Midnight"
+            expression = "0 0 0 * * ?"
           }
         }
         calendars {

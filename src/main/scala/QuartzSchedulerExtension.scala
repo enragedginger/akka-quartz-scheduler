@@ -97,6 +97,18 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   def isStarted = scheduler.isStarted
+
+  /**
+   * Returns the next Date a schedule will be fired
+   */
+  def nextTrigger(name: String): Option[Date] = {
+    import scala.collection.JavaConverters._
+    for {
+      jobKey <- runningJobs.get(name)
+      trigger <- scheduler.getTriggersOfJob(jobKey).asScala.headOption
+    } yield trigger.getNextFireTime
+  }
+
   /**
    * Suspends (pauses) all jobs in the scheduler
    */
