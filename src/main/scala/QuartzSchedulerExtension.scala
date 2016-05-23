@@ -15,14 +15,16 @@ import scala.collection.{immutable, mutable}
 import scala.util.control.Exception._
 
 
-object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension]
+object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension] {
+  override def get(system: ActorSystem): QuartzSchedulerExtension = super.get(system)
+}
 
 /**
  * Note that this extension will only be instantiated *once* *per actor system*.
  *
  */
 class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
-
+  
   private val log = Logging(system, this)
 
 
