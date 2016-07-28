@@ -58,6 +58,25 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
     }
 
+    "Properly Setup & Execute a Cron Job via Event Stream" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+      _system.eventStream.subscribe(receiver, Tick.getClass)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10Seconds", _system.eventStream, Tick)
+
+
+      /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
+        case Tock =>
+          Tock
+      }
+
+      receipt must contain(Tock)
+      receipt must have size(5)
+
+    }
+
     "Delayed Setup & Execute a Cron Job" in {
       val now = Calendar.getInstance()
       val t = now.getTimeInMillis()
