@@ -63,11 +63,11 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       val probe = TestProbe()
       receiver ! NewProbe(probe.ref)
       _system.eventStream.subscribe(receiver, Tick.getClass)
-      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10Seconds", _system.eventStream, Tick)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery12Seconds", _system.eventStream, Tick)
 
 
       /* This is a somewhat questionable test as the timing between components may not match the tick off. */
-      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
+      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(12, SECONDS), 5) {
         case Tock =>
           Tock
       }
@@ -206,6 +206,10 @@ object SchedulingFunctionalTest {
           cronEvery15Seconds {
             description = "A cron job that fires off every 15 seconds"
             expression = "*/15 * * ? * *"
+          }
+          cronEvery12Seconds {
+            description = "A cron job that fires off every 10 seconds"
+            expression = "*/12 * * ? * *"
           }
           cronEvery10Seconds {
             description = "A cron job that fires off every 10 seconds"
