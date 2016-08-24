@@ -1,6 +1,8 @@
 akka-quartz-scheduler
 =====================
 
+[![Build Status](https://api.travis-ci.org/enragedginger/akka-quartz-scheduler.svg?branch=master)](https://travis-ci.org/enragedginger/akka-quartz-scheduler)
+
 Quartz Extension and utilities for true scheduling in Akka 2.4.x.
 
 Current release is built for Scala 2.11.x and Akka 2.4.x and is available on Maven Central. If you would like support
