@@ -67,7 +67,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
 
       /* This is a somewhat questionable test as the timing between components may not match the tick off. */
-      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(12, SECONDS), 5) {
+      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
         case Tock =>
           Tock
       }
