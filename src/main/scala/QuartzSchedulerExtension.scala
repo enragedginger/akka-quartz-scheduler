@@ -4,7 +4,7 @@ import java.text.ParseException
 import java.util.{Date, TimeZone}
 
 import akka.actor._
-import akka.event.Logging
+import akka.event.{EventStream, Logging}
 import com.typesafe.config.ConfigFactory
 import org.quartz._
 import org.quartz.core.jmx.JobDataMapSupport
@@ -224,6 +224,17 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     */
   def schedule(name: String, receiver: ActorSelection, msg: AnyRef): Date = scheduleInternal(name, receiver, msg, None)
 
+
+  /**
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An EventStream, who will be published to each time the schedule fires
+    * @param msg      A message object, which will be published to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: EventStream, msg: AnyRef): Date = scheduleInternal(name, receiver, msg, None)
+
   /**
     * Schedule a job, whose named configuration must be available
     *
@@ -244,6 +255,16 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     * @return A date which indicates the first time the trigger will fire.
     */
   def schedule(name: String, receiver: ActorSelection, msg: AnyRef, startDate: Option[Date]): Date = scheduleInternal(name, receiver, msg, startDate)
+
+  /**
+    * Schedule a job, whose named configuration must be available
+    *
+    * @param name     A String identifying the job, which must match configuration
+    * @param receiver An EventStream, who will be published to each time the schedule fires
+    * @param msg      A message object, which will be published to `receiver` each time the schedule fires
+    * @return A date which indicates the first time the trigger will fire.
+    */
+  def schedule(name: String, receiver: EventStream, msg: AnyRef, startDate: Option[Date]): Date = scheduleInternal(name, receiver, msg, startDate)
 
   /**
     * Helper method for schedule because overloaded methods can't have default parameters.
