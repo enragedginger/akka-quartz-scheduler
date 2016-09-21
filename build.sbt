@@ -7,7 +7,7 @@ version := "1.5.1-akka-2.4.x"
 scalaVersion in ThisBuild := "2.11.8"
 
 libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-actor" % "2.4.10" ,
+    "com.typesafe.akka" %% "akka-actor" % "2.4.10" % "provided" ,
     "org.quartz-scheduler" % "quartz" % "2.2.3",
     // test dependencies
     "com.typesafe.akka" %% "akka-testkit" % "2.4.10" % "test",
