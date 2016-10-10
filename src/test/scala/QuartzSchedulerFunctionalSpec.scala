@@ -127,10 +127,27 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
           Tock
       }
 
+
       receipt must contain(Tock)
       receipt must have size(5)
-
     }
+  }
+
+  "The Quartz Scheduling Extension with Reschedule" must {
+    "Reschedule an existing Cron Job" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+      QuartzSchedulerExtension(_system).schedule("cronEveryEvenSecond", receiver, Tick)
+
+      noException should be thrownBy {
+        val newDate = QuartzSchedulerExtension(_system).rescheduleJob("cronEveryEvenSecond", receiver, Tick, None, "0/59 * * ? * *")
+        val jobCalender = Calendar.getInstance()
+        jobCalender.setTime(newDate)
+        jobCalender.get(Calendar.SECOND) mustEqual 59
+      }
+    }
+  }
 
     "Get next trigger date by schedule name" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
@@ -141,7 +158,6 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
       assert(nextRun.getOrElse(new java.util.Date()) ==jobDt)
     }
-  }
 
   "The Quartz Scheduling Extension with Dynamic Create" must {
     "Throw exception if creating schedule that already exists" in {
@@ -228,6 +244,10 @@ object SchedulingFunctionalTest {
           cronEvery5Seconds {
             description = "A cron job that fires off every 5 seconds"
             expression = "*/5 * * ? * *"
+          }
+          cronEveryEvenSecond {
+            description = "A cron job that fires off every even second"
+            expression = "0/2 * * ? * *"
           }
           cronEveryMidnight {
             description = "A cron job that fires off every Midnight"

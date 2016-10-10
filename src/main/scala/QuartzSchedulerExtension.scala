@@ -24,7 +24,7 @@ object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension] {
  *
  */
 class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
-  
+
   private val log = Logging(system, this)
 
 
@@ -216,6 +216,28 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
       val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
       schedules += (name.toUpperCase -> quartzSchedule)
   }
+
+  /**
+    * Reschedule a job
+    *
+    * @param name           A String identifying the job
+    * @param receiver       An ActorRef, who will be notified each time the schedule fires
+    * @param msg            A message object, which will be sent to `receiver` each time the schedule fires
+    * @param description    A string describing the purpose of the job
+    * @param cronExpression A string with the cron-type expression
+    * @param calendar       An optional calendar to use.
+    * @return A date which indicates the first time the trigger will fire.
+    */
+
+  def rescheduleJob(name: String, receiver: ActorRef, msg: AnyRef, description: Option[String] = None,
+                    cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone): Date = {
+    cancelJob(name)
+    removeSchedule(name)
+    createSchedule(name, description, cronExpression, calendar, timezone)
+    scheduleInternal(name, receiver, msg, None)
+  }
+
+  private def removeSchedule(name: String) = schedules = schedules - name.toUpperCase
 
   /**
     * Schedule a job, whose named configuration must be available
