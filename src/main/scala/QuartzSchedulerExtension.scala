@@ -18,9 +18,9 @@ import scala.util.control.Exception._
 object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension]
 
 /**
-  * Note that this extension will only be instantiated *once* *per actor system*.
-  *
-  */
+ * Note that this extension will only be instantiated *once* *per actor system*.
+ *
+ */
 class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
   private val log = Logging(system, this)
@@ -32,8 +32,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   protected val config = system.settings.config.withFallback(defaultConfig).getConfig("akka.quartz").root.toConfig
 
   // For config values that can be omitted by user, to setup a fallback
-  lazy val defaultConfig = ConfigFactory.parseString(
-    """
+  lazy val defaultConfig =  ConfigFactory.parseString("""
     akka.quartz {
       threadPool {
         threadCount = 1
@@ -42,7 +41,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
       }
       defaultTimezone = UTC
     }
-    """.stripMargin) // todo - boundary checks
+                                                      """.stripMargin)  // todo - boundary checks
 
   // The # of threads in the pool
   val threadCount = config.getInt("threadPool.threadCount")
@@ -56,12 +55,12 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   val defaultTimezone = TimeZone.getTimeZone(config.getString("defaultTimezone"))
 
   /**
-    * Parses job and trigger configurations, preparing them for any code request of a matching job.
-    * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
-    * and jobs are basically 'idiot' programs who fire off messages.
-    *
-    * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
-    */
+   * Parses job and trigger configurations, preparing them for any code request of a matching job.
+   * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
+   * and jobs are basically 'idiot' programs who fire off messages.
+   *
+   * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
+   */
   var schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone).map { kv =>
     kv._1.toUpperCase -> kv._2
   }
@@ -74,9 +73,9 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   initialiseCalendars()
 
   /**
-    * Puts the Scheduler in 'standby' mode, temporarily halting firing of triggers.
-    * Resumable by running 'start'
-    */
+   * Puts the Scheduler in 'standby' mode, temporarily halting firing of triggers.
+   * Resumable by running 'start'
+   */
   def standby(): Unit = scheduler.standby()
 
   def isInStandbyMode = scheduler.isInStandbyMode
@@ -98,10 +97,9 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   def isStarted = scheduler.isStarted
-
   /**
-    * Suspends (pauses) all jobs in the scheduler
-    */
+   * Suspends (pauses) all jobs in the scheduler
+   */
   def suspendAll(): Unit = {
     log.info("Suspending all Quartz jobs.")
     scheduler.pauseAll()
@@ -155,8 +153,8 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-    * Unpauses all jobs in the scheduler
-    */
+   * Unpauses all jobs in the scheduler
+   */
   def resumeAll(): Unit = {
     log.info("Resuming all Quartz jobs.")
     scheduler.resumeAll()
@@ -183,14 +181,14 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
-    * Create a schedule programmatically (must still be scheduled by calling 'schedule')
-    *
-    * @param name           A String identifying the job
-    * @param description    A string describing the purpose of the job
-    * @param cronExpression A string with the cron-type expression
-    * @param calendar       An optional calendar to use.
-    *
-    */
+   * Create a schedule programmatically (must still be scheduled by calling 'schedule')
+   *
+   * @param name A String identifying the job
+   * @param description A string describing the purpose of the job
+   * @param cronExpression A string with the cron-type expression
+   * @param calendar An optional calendar to use.
+   *
+   */
   def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None,
                      timezone: TimeZone = defaultTimezone) = schedules.get(name.toUpperCase) match {
     case Some(sched) =>
@@ -237,6 +235,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     */
   def schedule(name: String, receiver: ActorRef, msg: AnyRef): Date = scheduleInternal(name, receiver, msg, None)
 
+
   /**
     * Schedule a job, whose named configuration must be available
     *
@@ -257,6 +256,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     */
   def schedule(name: String, receiver: ActorRef, msg: AnyRef, startDate: Option[Date]): Date = scheduleInternal(name, receiver, msg, startDate)
 
+
   /**
     * Schedule a job, whose named configuration must be available
     *
@@ -269,10 +269,9 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
   /**
     * Helper method for schedule because overloaded methods can't have default parameters.
-    *
-    * @param name      The name of the schedule / job.
-    * @param receiver  The receiver of the job message. This must be either an ActorRef or an ActorSelection.
-    * @param msg       The message to send to kick off the job.
+    * @param name The name of the schedule / job.
+    * @param receiver The receiver of the job message. This must be either an ActorRef or an ActorSelection.
+    * @param msg The message to send to kick off the job.
     * @param startDate The optional date indicating the earliest time the job may fire.
     * @return A date which indicates the first time the trigger will fire.
     */
@@ -281,11 +280,12 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
 
+
   /**
-    * Creates the actual jobs for Quartz, and setups the Trigger, etc.
-    *
-    * @return A date, which indicates the first time the trigger will fire.
-    */
+   * Creates the actual jobs for Quartz, and setups the Trigger, etc.
+   *
+   * @return A date, which indicates the first time the trigger will fire.
+   */
   protected def scheduleJob(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date])(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
     log.info("Setting up scheduled job '{}', with '{}'", name, schedule)
@@ -315,8 +315,8 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
 
   /**
-    * Parses calendar configurations, creates Calendar instances and attaches them to the scheduler
-    */
+   * Parses calendar configurations, creates Calendar instances and attaches them to the scheduler
+   */
   protected def initialiseCalendars() {
     for ((name, calendar) <- QuartzCalendars(config, defaultTimezone)) {
       log.info("Configuring Calendar '{}'", name)
@@ -324,6 +324,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
       scheduler.addCalendar(name.toUpperCase, calendar, true, true)
     }
   }
+
 
 
   lazy protected val threadPool = {

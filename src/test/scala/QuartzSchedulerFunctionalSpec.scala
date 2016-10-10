@@ -54,7 +54,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       }
 
       receipt must contain(Tock)
-      receipt must have size (5)
+      receipt must have size(5)
 
     }
 
@@ -74,7 +74,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
           Tock
       }
 
-      receipt must have size (0)
+      receipt must have size(0)
 
       /*
       Get the startDate and calculate the next run based on the startDate
@@ -87,7 +87,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
       val seconds = scheduleCalender.get(Calendar.SECOND)
       val addSeconds = 15 - (seconds % 15)
-      val secs = if (addSeconds > 0) addSeconds else 15
+      val secs = if(addSeconds > 0) addSeconds else 15
       scheduleCalender.add(Calendar.SECOND, secs)
 
       //Dates must be equal in seconds
@@ -107,8 +107,9 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
           Tock
       }
 
+
       receipt must contain(Tock)
-      receipt must have size (5)
+      receipt must have size(5)
     }
   }
 
@@ -132,7 +133,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
     "Throw exception if creating schedule that already exists" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
 
-      an[IllegalArgumentException] must be thrownBy {
+      an [IllegalArgumentException] must be thrownBy {
         QuartzSchedulerExtension(_system).createSchedule("cronEvery10Seconds", None, "*/10 * * ? * *", None)
       }
     }
@@ -140,7 +141,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
     "Throw exception if creating a schedule that has invalid cron expression" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
 
-      an[IllegalArgumentException] must be thrownBy {
+      an [IllegalArgumentException] must be thrownBy {
         QuartzSchedulerExtension(_system).createSchedule("nonExistingCron", None, "*/10 x * ? * *", None)
       }
     }
@@ -161,9 +162,10 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       }
 
       receipt must contain(Tock)
-      receipt must have size (5)
+      receipt must have size(5)
     }
   }
+
 
   case class NewProbe(probe: ActorRef)
   case object Tick
@@ -179,6 +181,9 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
         probe ! Tock
     }
   }
+
+
+
 
 }
 
