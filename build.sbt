@@ -4,20 +4,20 @@ organization := "com.enragedginger"
 
 version := "1.5.1-akka-2.4.x"
 
-scalaVersion in ThisBuild := "2.11.8"
+scalaVersion in ThisBuild := "2.12.0"
 
 libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-actor" % "2.4.10" % "provided" ,
+    "com.typesafe.akka" %% "akka-actor" % "2.4.12" % "provided" ,
     "org.quartz-scheduler" % "quartz" % "2.2.3",
     // test dependencies
-    "com.typesafe.akka" %% "akka-testkit" % "2.4.10" % "test",
-    "org.specs2" %% "specs2" % "3.7" % "test",
+    "com.typesafe.akka" %% "akka-testkit" % "2.4.12" % "test",
+    "org.specs2" %% "specs2-core" % "3.8.6" % "test",
+    "org.specs2" %% "specs2-junit" % "3.8.6" % "test",
     "junit" % "junit" % "4.12" % "test",
     "org.slf4j" % "slf4j-api" % "1.7.21" % "test",
     "org.slf4j" % "slf4j-jcl" % "1.7.21" % "test",
     "org.scalatest" %% "scalatest" % "3.0.0" % "test"
 )
-
 
 resolvers ++= Seq(
   "Local Maven Repository"       at "file://" + Path.userHome.absolutePath + "/.m2/repository",
