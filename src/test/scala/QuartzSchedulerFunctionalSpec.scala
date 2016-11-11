@@ -8,6 +8,7 @@ import org.junit.runner.RunWith
 import com.typesafe.config.ConfigFactory
 import akka.actor._
 import akka.testkit._
+import scala.concurrent._
 import scala.concurrent.duration._
 import org.scalatest.junit.JUnitRunner
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
@@ -23,8 +24,8 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
   with BeforeAndAfterAll {
 
   override def afterAll {
-    system.shutdown()
-    system.awaitTermination()
+    system.terminate()
+    Await.result(system.whenTerminated, Duration.Inf)
   }
 
   def this() = this(ActorSystem("QuartzSchedulerFunctionalSpec", SchedulingFunctionalTest.sampleConfiguration))
