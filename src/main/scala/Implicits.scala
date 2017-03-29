@@ -13,4 +13,10 @@ object `package` {
   implicit val quartzJobLoggerType: LogSource[SimpleActorMessageJob] = new LogSource[SimpleActorMessageJob] {
     def genString(t: SimpleActorMessageJob): String = "[QuartzJob]"
   }
+
+  implicit def scalaFunctionToJavaBiFunction[From1, From2, To](function: (From1, From2) => To): java.util.function.BiFunction[From1, From2, To] = {
+    new java.util.function.BiFunction[From1, From2, To] {
+      override def apply(input: From1, value: From2): To = function(input, value)
+    }
+  }
 }
