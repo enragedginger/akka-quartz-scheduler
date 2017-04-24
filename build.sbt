@@ -2,23 +2,23 @@ name := "akka-quartz-scheduler"
 
 organization := "com.enragedginger"
 
-version := "1.6.0-akka-2.4.x"
+version := "1.6.1-akka-2.5.x"
 
 scalaVersion in ThisBuild := "2.12.0"
 
 crossScalaVersions := Seq("2.11.8", "2.12.0")
 
 libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-actor" % "2.4.14" % "provided" ,
+    "com.typesafe.akka" %% "akka-actor" % "2.5.0" % "provided" ,
     "org.quartz-scheduler" % "quartz" % "2.2.3",
     // test dependencies
-    "com.typesafe.akka" %% "akka-testkit" % "2.4.14" % "test",
+    "com.typesafe.akka" %% "akka-testkit" % "2.5.0" % "test",
     "org.specs2" %% "specs2-core" % "3.8.6" % "test",
     "org.specs2" %% "specs2-junit" % "3.8.6" % "test",
     "junit" % "junit" % "4.12" % "test",
     "org.slf4j" % "slf4j-api" % "1.7.21" % "test",
     "org.slf4j" % "slf4j-jcl" % "1.7.21" % "test",
-    "org.scalatest" %% "scalatest" % "3.0.1" % "test"
+    "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
 
 resolvers ++= Seq(
