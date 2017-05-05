@@ -3,9 +3,9 @@ akka-quartz-scheduler
 
 [![Build Status](https://api.travis-ci.org/enragedginger/akka-quartz-scheduler.svg?branch=master)](https://travis-ci.org/enragedginger/akka-quartz-scheduler)
 
-Quartz Extension and utilities for true scheduling in Akka 2.4.x.
+Quartz Extension and utilities for true scheduling in Akka 2.5.x.
 
-Current release is built for Scala 2.11.x, 2.12.x and Akka 2.4.x and is available on Maven Central. If you would like support
+Current release is built for Scala 2.12.x and Akka 2.5.x and is available on Maven Central. If you would like support
 for a different combination of Scala and Akka, simply post your request on the issues page (as well as a reason as to
 why the currently available versions won't work for you. I'm always curious about these things).
 
@@ -78,6 +78,9 @@ change of that sort is fixable without Operations needing to require a recompila
 Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
 
 ```
+// For Akka 2.5.x and Scala 2.12.x
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.1-akka-2.5.x"
+
 // For Akka 2.4.x and Scala 2.11.x, 2.12.x
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.0-akka-2.4.x"
 ```
