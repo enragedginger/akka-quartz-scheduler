@@ -37,7 +37,7 @@ publishTo := {
         Some("releases"  at nexus + "service/local/staging/deploy/maven2")
 }
 
-useGpg := true
+//useGpg := true
 
 pomExtra := (
   <url>https://github.com/enragedginger/akka-quartz-scheduler</url>
