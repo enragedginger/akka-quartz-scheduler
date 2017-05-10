@@ -77,7 +77,7 @@ change of that sort is fixable without Operations needing to require a recompila
 
 Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
 
-```
+```scala
 // For Akka 2.5.x and Scala 2.12.x
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.1-akka-2.5.x"
 
@@ -85,7 +85,7 @@ libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.1-a
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.0-akka-2.4.x"
 ```
 
-```
+```scala
 //Older versions of the artifact for those that require pre Akka 2.3 or pre Scala 2.11
 //If you would like a current version of the artifact to be published for your required version
 //of Akka and Scala, simply file on issue on the project page.
