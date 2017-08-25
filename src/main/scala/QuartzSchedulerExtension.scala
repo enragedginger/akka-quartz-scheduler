@@ -10,6 +10,7 @@ import org.quartz._
 import org.quartz.core.jmx.JobDataMapSupport
 import org.quartz.impl.DirectSchedulerFactory
 import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
+import org.quartz.spi.JobStore
 
 import scala.collection.{immutable, mutable}
 import scala.util.control.Exception._
@@ -370,7 +371,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     _tp
   }
 
-  lazy protected val jobStore = {
+  lazy protected val jobStore: JobStore = {
     // TODO - Make this potentially configurable,  but for now we don't want persistable jobs.
     new RAMJobStore()
   }
