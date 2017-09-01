@@ -10,7 +10,7 @@ crossScalaVersions := Seq("2.11.8", "2.12.0")
 
 libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor" % "2.5.0" % "provided" ,
-    "org.quartz-scheduler" % "quartz" % "2.2.3",
+    "org.quartz-scheduler" % "quartz" % "2.3.0",
     // test dependencies
     "com.typesafe.akka" %% "akka-testkit" % "2.5.0" % "test",
     "org.specs2" %% "specs2-core" % "3.8.6" % "test",
