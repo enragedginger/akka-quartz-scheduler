@@ -360,7 +360,7 @@ An example Calendar, which specifies an exclusion set of `00:00 - 07:59` and `18
 ```
 CronOnlyBusinessHours {
   type = Cron
-  excludeExpression = "* * 0-7,18-23 ? *
+  excludeExpression = "* * 0-7,18-23 ? *"
 }
 ```
 
