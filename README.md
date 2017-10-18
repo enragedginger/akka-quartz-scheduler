@@ -358,9 +358,9 @@ used to specify what times a job *cannot* run in (the opposite of a Cron Schedul
 An example Calendar, which specifies an exclusion set of `00:00 - 07:59` and `18:00 - 23:59` (thereby only allowing jobs to run from `08:00 - 17:59`):
 
 ```
-CronOnlyBusinessHours {
+OnlyBusinessHours {
   type = Cron
-  excludeExpression = "* * 0-7,18-23 ? *"
+  excludeExpression = "* * 0-7,18-23 ? * *"
 }
 ```
 
