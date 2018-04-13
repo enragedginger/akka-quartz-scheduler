@@ -42,7 +42,23 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       }
 
     }
+    "Properly Setup & Execute a Cron Job with correct fireTime" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10SecondsWithFireTime", receiver, MessageRequireFireTime(Tick))
 
+
+      /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
+        case TockWithFireTime(scheduledFireTime) =>
+          scheduledFireTime
+      }
+      0 until 5 foreach { i =>
+        assert(receipt(i)==jobDt.getTime+i*10*1000)
+      }
+      receipt must have size(5)
+    }
     "Properly Setup & Execute a Cron Job" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
       val probe = TestProbe()
@@ -201,6 +217,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
   case class NewProbe(probe: ActorRef)
   case object Tick
   case object Tock
+  case class TockWithFireTime(scheduledFireTime:Long)
 
   class ScheduleTestReceiver extends Actor with ActorLogging {
     var probe: ActorRef = _
@@ -208,8 +225,11 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       case NewProbe(_p) =>
         probe = _p
       case Tick =>
-        log.info("Got a Tick.")
+        log.info(s"Got a Tick.")
         probe ! Tock
+      case MessageWithFireTime(Tick,scheduledFireTime) =>
+        log.info(s"Got a Tick for ${scheduledFireTime.getTime}.")
+        probe ! TockWithFireTime(scheduledFireTime.getTime)
     }
   }
 
@@ -238,6 +258,9 @@ object SchedulingFunctionalTest {
             description = "A cron job that fires off every 10 seconds"
             expression = "*/12 * * ? * *"
           }
+          cronEvery10SecondsWithFireTime{
+          description = "A cron job that fires off every 10 seconds with FireTime"
+          expression = "*/10 * * ? * *"}
           cronEvery10Seconds {
             description = "A cron job that fires off every 10 seconds"
             expression = "*/10 * * ? * *"

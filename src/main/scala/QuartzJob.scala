@@ -81,7 +81,11 @@ class SimpleActorMessageJob extends Job {
        * JobDataMap uses AnyRef, while message can be any (though do we really want to support value classes?)
        * so this casting (and the initial save into the map) may involve boxing.
        **/
-      val msg = dataMap.get("message")
+      val msg = dataMap.get("message") match {
+        case MessageRequireFireTime(msg) =>
+          MessageWithFireTime(msg,context.getScheduledFireTime)
+        case msg => msg
+      }
       val log = Logging(logBus, this)
       log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
       receiver match {
