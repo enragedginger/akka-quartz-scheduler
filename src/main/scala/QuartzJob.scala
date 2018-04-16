@@ -82,9 +82,9 @@ class SimpleActorMessageJob extends Job {
        * so this casting (and the initial save into the map) may involve boxing.
        **/
       val msg = dataMap.get("message") match {
-        case MessageRequireFireTime(msg) =>
-          MessageWithFireTime(msg,context.getScheduledFireTime)
-        case msg => msg
+        case MessageRequireFireTime(m) =>
+          MessageWithFireTime(m,context.getScheduledFireTime)
+        case any:Any => any
       }
       val log = Logging(logBus, this)
       log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
