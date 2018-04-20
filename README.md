@@ -153,6 +153,20 @@ messages were dealt with more immediately than "normal" actor messages, they cou
 
 The details on the configuration of a job is outlined below in the section '*Schedule Configuration*'.
 
+### Returning scheduled Fire Time
+
+Sometimes we need to know the trigger time, with which we can known which job instance is being processed. so when an error occours,we can recover that with the same event,because the event contains the fire time.
+
+Here is an example,using the case class MessageRequireFireTime wrapping the Tick message, which will send a `MessageWithFireTime(Tick,scheduledFireTime)` message to a `WorkerActor`:
+
+```scala
+case object Tick
+
+val worker = system.actorOf(Props[WorkerActor])
+
+QuartzSchedulerExtension(system).schedule("Every30Seconds", worker, MessageRequireFireTime(Tick))
+```
+
 
 ### Configuration of Quartz Scheduler
 
