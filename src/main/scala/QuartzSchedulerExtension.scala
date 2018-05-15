@@ -356,8 +356,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   protected def initialiseCalendars() {
     for ((name, calendar) <- QuartzCalendars(config, defaultTimezone)) {
       log.info("Configuring Calendar '{}'", name)
-      // Recast calendar name as upper case to make later lookups easier ( no stupid case clashing at runtime )
-      scheduler.addCalendar(name.toUpperCase, calendar, true, true)
+      scheduler.addCalendar(name, calendar, true, true)
     }
   }
 
