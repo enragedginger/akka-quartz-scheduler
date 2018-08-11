@@ -1,4 +1,5 @@
 package com.typesafe.akka.extension.quartz
+
 import java.util.Date
 
 /**

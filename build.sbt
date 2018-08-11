@@ -21,9 +21,7 @@ libraryDependencies ++= Seq(
     "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
 
-resolvers ++= Seq(
-  "Local Maven Repository"       at "file://" + Path.userHome.absolutePath + "/.m2/repository",
-  "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
   
 pomIncludeRepository := { _ => false }
 

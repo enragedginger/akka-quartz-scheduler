@@ -5,7 +5,6 @@ import java.util.{Date, TimeZone}
 
 import akka.actor._
 import akka.event.{EventStream, Logging}
-import com.typesafe.config.ConfigFactory
 import org.quartz._
 import org.quartz.core.jmx.JobDataMapSupport
 import org.quartz.impl.DirectSchedulerFactory
@@ -13,6 +12,7 @@ import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
 import org.quartz.spi.JobStore
 
 import scala.collection.{immutable, mutable}
+import scala.collection.JavaConverters._
 import scala.util.control.Exception._
 
 
@@ -32,23 +32,11 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   // todo - use of the circuit breaker to encapsulate quartz failures?
   def schedulerName = "QuartzScheduler~%s".format(system.name)
 
-  protected val config = system.settings.config.withFallback(defaultConfig).getConfig("akka.quartz").root.toConfig
-
-  // For config values that can be omitted by user, to setup a fallback
-  lazy val defaultConfig =  ConfigFactory.parseString("""
-    akka.quartz {
-      threadPool {
-        threadCount = 1
-        threadPriority = 5
-        daemonThreads = true
-      }
-      defaultTimezone = UTC
-    }
-                                                      """.stripMargin)  // todo - boundary checks
+  protected val config = system.settings.config.getConfig("akka.quartz").root.toConfig
 
   // The # of threads in the pool
   val threadCount = config.getInt("threadPool.threadCount")
-  // Priority of threads created. Defaults at 5, can be between 1 (lowest) and 10 (highest)
+  require(threadCount >= 1, "Quartz Thread Count (akka.quartz.threadPool.threadCount) must be a positive integer.")
   val threadPriority = config.getInt("threadPool.threadPriority")
   require(threadPriority >= 1 && threadPriority <= 10,
     "Quartz Thread Priority (akka.quartz.threadPool.threadPriority) must be a positive integer between 1 (lowest) and 10 (highest).")
@@ -64,9 +52,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    *
    * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
    */
-  var schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone).map { kv =>
-    kv._1.toUpperCase -> kv._2
-  }
+  var schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone)
   val runningJobs: mutable.Map[String, JobKey] = mutable.Map.empty[String, JobKey]
 
   log.debug("Configured Schedules: {}", schedules)
@@ -205,7 +191,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    *
    */
   def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None,
-                     timezone: TimeZone = defaultTimezone) = schedules.get(name.toUpperCase) match {
+                     timezone: TimeZone = defaultTimezone) = schedules.get(name) match {
     case Some(sched) =>
       throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
     case None =>
@@ -215,7 +201,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
         case Right(expr) => expr
       }
       val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
-      schedules += (name.toUpperCase -> quartzSchedule)
+      schedules += (name -> quartzSchedule)
   }
 
   /**
@@ -238,7 +224,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     scheduleInternal(name, receiver, msg, None)
   }
 
-  private def removeSchedule(name: String) = schedules = schedules - name.toUpperCase
+  private def removeSchedule(name: String) = schedules = schedules - name
 
   /**
     * Schedule a job, whose named configuration must be available
@@ -311,7 +297,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     * @param startDate The optional date indicating the earliest time the job may fire.
     * @return A date which indicates the first time the trigger will fire.
     */
-  private def scheduleInternal(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = schedules.get(name.toUpperCase) match {
+  private def scheduleInternal(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = schedules.get(name) match {
     case Some(schedule) => scheduleJob(name, receiver, msg, startDate)(schedule)
     case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
@@ -356,9 +342,9 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   protected def initialiseCalendars() {
     for ((name, calendar) <- QuartzCalendars(config, defaultTimezone)) {
       log.info("Configuring Calendar '{}'", name)
-      // Recast calendar name as upper case to make later lookups easier ( no stupid case clashing at runtime )
-      scheduler.addCalendar(name.toUpperCase, calendar, true, true)
+      scheduler.addCalendar(name, calendar, true, true)
     }
+    log.info(s"Initialized calendars: ${scheduler.getCalendarNames.asScala mkString ","}")
   }
 
 

@@ -1,13 +1,15 @@
 package com.typesafe.akka.extension.quartz
-package test
+
+import java.time.LocalDate
 
 import org.specs2.runner.JUnitRunner
 import org.specs2.Specification
 import org.junit.runner.RunWith
 import org.specs2.matcher.ThrownExpectations
 import com.typesafe.config.ConfigFactory
-import akka.actor.ActorSystem
-import java.util.{Calendar, GregorianCalendar, Date, TimeZone}
+import java.util.{Calendar, Date, TimeZone}
+
+import scala.collection.JavaConverters._
 import org.quartz.impl.calendar._
 
 @RunWith(classOf[JUnitRunner])
@@ -45,49 +47,36 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
 
     import Calendar._
 
-    def _day(month: Int, day: Int) = {
-      val _day = Calendar.getInstance()
-      _day.set(MONTH, month)
-      _day.set(DAY_OF_MONTH, day)
-      _day
-    }
+    cal.isDayExcluded(getCalendar(JANUARY,   1, 1995)) must beTrue
+    cal.isDayExcluded(getCalendar(JANUARY,   1, 1975)) must beTrue
+    cal.isDayExcluded(getCalendar(JANUARY,   1, 2075)) must beTrue
 
+    cal.isDayExcluded(getCalendar(JANUARY,   2, 1995)) must beFalse
+    cal.isDayExcluded(getCalendar(JANUARY,   2, 1975)) must beFalse
+    cal.isDayExcluded(getCalendar(JANUARY,   2, 2075)) must beFalse
 
-    cal.isDayExcluded(_day(DECEMBER, 25)) must beTrue
-    cal.isDayExcluded(_day(JANUARY, 1)) must beTrue
-    cal.isDayExcluded(_day(FEBRUARY, 25)) must beFalse
-    /* Check that regardless of year, we're also OK -- we defined Christmas 2000, but we can go backwards or forwards */
     cal.isDayExcluded(getCalendar(DECEMBER, 25, 1995)) must beTrue
     cal.isDayExcluded(getCalendar(DECEMBER, 25, 1975)) must beTrue
     cal.isDayExcluded(getCalendar(DECEMBER, 25, 2075)) must beTrue
+
+    cal.isDayExcluded(getCalendar(DECEMBER, 31, 1995)) must beFalse
+    cal.isDayExcluded(getCalendar(DECEMBER, 31, 1975)) must beFalse
+    cal.isDayExcluded(getCalendar(DECEMBER, 31, 2075)) must beFalse
   }
 
  def parseHoliday = {
    calendars must haveKey("Easter")
    calendars("Easter") must haveClass[HolidayCalendar]
-   val cal = calendars("Easter").asInstanceOf[HolidayCalendar]
-   /** By "TimeIncluded" the Calendar means does this calendar include an exclusion for that time */
-   /* excludeDates = ["2013-03-31", "2014-04-20", "2015-04-05", "2016-03-27", "2017-04-16"] */
 
-   import Calendar._
+   calendars("Easter").asInstanceOf[HolidayCalendar].getExcludedDates.asScala must containAllOf(List(
+     getDate(2013, 3, 31),
+     getDate(2014, 4, 20),
+     getDate(2015, 4,  5),
+     getDate(2016, 3, 27),
+     getDate(2017, 4, 16)
+   ))
 
-   implicit val tz = cal.getTimeZone
-
-   def _epoch(month: Int, day: Int, year: Int) = getCalendar(month, day, year).getTime.getTime
-
-   cal.isTimeIncluded(_epoch(MARCH, 31, 2013)) must beTrue
-   cal.isTimeIncluded(_epoch(APRIL, 20, 2014)) must beTrue
-   cal.isTimeIncluded(_epoch(APRIL, 5, 2015)) must beTrue
-   cal.isTimeIncluded(_epoch(MARCH, 27, 2016)) must beTrue
-   cal.isTimeIncluded(_epoch(APRIL, 16, 2017)) must beTrue
-
-   /** This test is failing, and quartz itself has no tests around Holiday calendar
-     * for me to confirm the expected behavior. For now,  Holiday Calendar should be used with great care.
-     */
-   cal.isTimeIncluded(_epoch(APRIL, 17, 2017)) must beFalse
-   cal.isTimeIncluded(_epoch(DECEMBER, 25, 20123)) must beFalse
-   cal.isTimeIncluded(_epoch(JANUARY, 2, 2023)) must beFalse
- } pendingUntilFixed
+ }
 
 
   def parseDaily = {
@@ -95,7 +84,6 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     calendars("HourOfTheWolf") must haveClass[DailyCalendar]
     val cal = calendars("HourOfTheWolf").asInstanceOf[DailyCalendar]
 
-    import Calendar._
     implicit val tz = cal.getTimeZone
 
     // This is based on how quartz does its own testing. Not ideal.
@@ -150,7 +138,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
           }
           Easter {
             type = Holiday
-            description = "The easter holiday (a moveable feast) for the next five years"
+            description = "The Easter holiday (a moveable feast) for the next five years"
             excludeDates = ["2013-03-31", "2014-04-20", "2015-04-05", "2016-03-27", "2017-04-16"]
           }
           HourOfTheWolf {
@@ -187,14 +175,16 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
       """.stripMargin)
   }
 
-  def getCalendar(month: Int, day: Int, year: Int)(implicit tz: TimeZone = TimeZone.getTimeZone("UTC")) = {
-    import Calendar._
+  def getCalendar(month: Int, day: Int, year: Int)(implicit tz: TimeZone = TimeZone.getTimeZone("UTC")): Calendar = {
     val _day = Calendar.getInstance(tz)
-    _day.set(MONTH, month)
-    _day.set(DAY_OF_MONTH, day)
-    _day.set(YEAR, year)
+    _day.set(year, month, day)
     _day
   }
+
+  def getDate(year: Int, month: Int, day: Int): Date = {
+    Date.from(LocalDate.of(year, month, day).atStartOfDay(java.time.ZoneId.systemDefault).toInstant)
+  }
+
 
   lazy val calendars = QuartzCalendars(sampleConfiguration, TimeZone.getTimeZone("UTC"))
 

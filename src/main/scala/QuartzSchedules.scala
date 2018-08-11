@@ -9,8 +9,6 @@ import collection.immutable
 import java.text.ParseException
 
 import scala.collection.JavaConverters._
-import scala.Some
-import scala.annotation.tailrec
 
 /**
  * This is really about triggers - as the "job" is roughly defined in the code that
