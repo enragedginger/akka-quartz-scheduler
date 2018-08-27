@@ -59,6 +59,25 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       }
       receipt must have size(5)
     }
+    "Properly Setup & Execute a Cron Job with correct fireTimes" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10SecondsWithFireTime", receiver, MessageRequireFireTime(Tick, AllFiringTimes))
+
+      /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+      val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
+        case TockWithFireTimes(previousFireTime, scheduledFireTime, nextFireTime) =>
+          (previousFireTime, scheduledFireTime, nextFireTime)
+      }
+      0 until 5 foreach { i =>
+        val expectedCurrent = jobDt.getTime + i * 10 * 1000
+        val expectedPrevious = if (i == 0) 0 else expectedCurrent - 10 * 1000
+        val expectedNext = expectedCurrent + 10 * 1000
+        assert(receipt(i) == (expectedPrevious, expectedCurrent, expectedNext))
+      }
+      receipt must have size(5)
+    }
     "Properly Setup & Execute a Cron Job" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
       val probe = TestProbe()
@@ -218,6 +237,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
   case object Tick
   case object Tock
   case class TockWithFireTime(scheduledFireTime:Long)
+  case class TockWithFireTimes(previousFireTime:Long, scheduledFireTime:Long, nextFireTime:Long)
 
   class ScheduleTestReceiver extends Actor with ActorLogging {
     var probe: ActorRef = _
@@ -230,6 +250,12 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       case MessageWithFireTime(Tick,scheduledFireTime) =>
         log.info(s"Got a Tick for ${scheduledFireTime.getTime}.")
         probe ! TockWithFireTime(scheduledFireTime.getTime)
+      case MessageWithFireTimes(Tick, previousFireTime, scheduledFireTime, nextFireTime) =>
+        log.info(s"Got a Tick for previousFireTime=${previousFireTime} scheduledFireTime=${scheduledFireTime} nextFireTime=${nextFireTime}")
+        probe ! TockWithFireTimes(
+          previousFireTime.map(u⇒u.getTime).getOrElse(0),
+          scheduledFireTime.map(u⇒u.getTime).getOrElse(0),
+          nextFireTime.map(u⇒u.getTime).getOrElse(0))
     }
   }
 

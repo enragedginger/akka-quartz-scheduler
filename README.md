@@ -155,9 +155,11 @@ The details on the configuration of a job is outlined below in the section '*Sch
 
 ### Returning scheduled Fire Time
 
-Sometimes we need to know the trigger time, with which we can known which job instance is being processed. so when an error occours,we can recover that with the same event,because the event contains the fire time.
+There are situations where the fire time is helpful. For example, when an error occurs, we know which job trigger is 
+being processed and can be recovered.
 
-Here is an example,using the case class MessageRequireFireTime wrapping the Tick message, which will send a `MessageWithFireTime(Tick,scheduledFireTime)` message to a `WorkerActor`:
+Here is an example using the case class `MessageRequireFireTime` wrapping the `Tick` message.  This will send a
+`MessageWithFireTime(Tick,scheduledFireTime)` message to a `WorkerActor`:
 
 ```scala
 case object Tick
@@ -167,6 +169,16 @@ val worker = system.actorOf(Props[WorkerActor])
 QuartzSchedulerExtension(system).schedule("Every30Seconds", worker, MessageRequireFireTime(Tick))
 ```
 
+Here is another example using the case class `MessageRequireFireTimes` wrapping the `Tick` message.  This will send a
+`MessageWithFireTimes(Tick, previousFireTime, scheduledFireTime, nextFireTime)` message to a `WorkerActor`:
+
+```scala
+case object Tick
+
+val worker = system.actorOf(Props[WorkerActor])
+
+QuartzSchedulerExtension(system).schedule("Every30Seconds", worker, MessageRequireFireTimes(Tick))
+```
 
 ### Configuration of Quartz Scheduler
 
@@ -310,7 +322,7 @@ follows a time format of `HH:MM[:SS[:mmm]]` where:
     - SS is the **optional** second of the specified time, and must be in the range 0-59
     - mmm is the **optional** millisecond of the specified time, and must be in the range 0-999
 
-An example, which  doesn't allow jobs to run between 3AM and 5AM during the PST Timezone:
+An example, which doesn't allow jobs to run between 3AM and 5AM during the PST Timezone:
 
 ```
 HourOfTheWolf {
