@@ -30,7 +30,10 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
   def this() = this(ActorSystem("QuartzSchedulerFunctionalSpec", SchedulingFunctionalTest.sampleConfiguration))
 
-  "The Quartz Scheduling Extension"  must {
+  "The Quartz Scheduling Extension" must {
+
+    val tickTolerance = 500 // 500 millisecond tolerance
+
     "Reject a job which is not named in the config" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
       val probe = TestProbe()
@@ -42,12 +45,12 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       }
 
     }
+
     "Properly Setup & Execute a Cron Job with correct fireTime" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
       val probe = TestProbe()
       receiver ! NewProbe(probe.ref)
       val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10SecondsWithFireTime", receiver, MessageRequireFireTime(Tick))
-
 
       /* This is a somewhat questionable test as the timing between components may not match the tick off. */
       val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
@@ -55,17 +58,17 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
           scheduledFireTime
       }
       0 until 5 foreach { i =>
-        assert(receipt(i)==jobDt.getTime+i*10*1000)
+        assert(receipt(i) === jobDt.getTime + i * 10 * 1000 +- tickTolerance)
       }
-      receipt must have size(5)
+      receipt must have size (5)
     }
+
     "Properly Setup & Execute a Cron Job with correct fireTimes" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
       val probe = TestProbe()
       receiver ! NewProbe(probe.ref)
-      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10SecondsWithFireTime", receiver, MessageRequireFireTime(Tick, AllFiringTimes))
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10SecondsWithFireTimes", receiver, MessageRequireFireTime(Tick, AllFiringTimes))
 
-      /* This is a somewhat questionable test as the timing between components may not match the tick off. */
       val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
         case TockWithFireTimes(previousFireTime, scheduledFireTime, nextFireTime) =>
           (previousFireTime, scheduledFireTime, nextFireTime)
@@ -74,10 +77,13 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
         val expectedCurrent = jobDt.getTime + i * 10 * 1000
         val expectedPrevious = if (i == 0) 0 else expectedCurrent - 10 * 1000
         val expectedNext = expectedCurrent + 10 * 1000
-        assert(receipt(i) == (expectedPrevious, expectedCurrent, expectedNext))
+        assert(receipt(i)._1 === expectedPrevious +- tickTolerance)
+        assert(receipt(i)._2 === expectedCurrent +- tickTolerance)
+        assert(receipt(i)._3 === expectedNext +- tickTolerance)
       }
-      receipt must have size(5)
+      receipt must have size (5)
     }
+
     "Properly Setup & Execute a Cron Job" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
       val probe = TestProbe()
@@ -92,7 +98,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       }
 
       receipt must contain(Tock)
-      receipt must have size(5)
+      receipt must have size (5)
 
     }
 
@@ -111,7 +117,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       }
 
       receipt must contain(Tock)
-      receipt must have size(5)
+      receipt must have size (5)
 
     }
 
@@ -131,7 +137,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
           Tock
       }
 
-      receipt must have size(0)
+      receipt must have size (0)
 
       /*
       Get the startDate and calculate the next run based on the startDate
@@ -144,7 +150,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
       val seconds = scheduleCalender.get(Calendar.SECOND)
       val addSeconds = 15 - (seconds % 15)
-      val secs = if(addSeconds > 0) addSeconds else 15
+      val secs = if (addSeconds > 0) addSeconds else 15
       scheduleCalender.add(Calendar.SECOND, secs)
 
       //Dates must be equal in seconds
@@ -165,7 +171,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
 
       receipt must contain(Tock)
-      receipt must have size(5)
+      receipt must have size (5)
     }
   }
 
@@ -185,21 +191,21 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
     }
   }
 
-    "Get next trigger date by schedule name" in {
-      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
-      val probe = TestProbe()
-      receiver ! NewProbe(probe.ref)
-      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEveryMidnight", _system.actorSelection(receiver.path), Tick)
-      val nextRun = QuartzSchedulerExtension(_system).nextTrigger("cronEveryMidnight")
+  "Get next trigger date by schedule name" in {
+    val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+    val probe = TestProbe()
+    receiver ! NewProbe(probe.ref)
+    val jobDt = QuartzSchedulerExtension(_system).schedule("cronEveryMidnight", _system.actorSelection(receiver.path), Tick)
+    val nextRun = QuartzSchedulerExtension(_system).nextTrigger("cronEveryMidnight")
 
-      assert(nextRun.getOrElse(new java.util.Date()) ==jobDt)
-    }
+    assert(nextRun.getOrElse(new java.util.Date()) == jobDt)
+  }
 
   "The Quartz Scheduling Extension with Dynamic Create" must {
     "Throw exception if creating schedule that already exists" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
 
-      an [IllegalArgumentException] must be thrownBy {
+      an[IllegalArgumentException] must be thrownBy {
         QuartzSchedulerExtension(_system).createSchedule("cronEvery10Seconds", None, "*/10 * * ? * *", None)
       }
     }
@@ -207,7 +213,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
     "Throw exception if creating a schedule that has invalid cron expression" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
 
-      an [IllegalArgumentException] must be thrownBy {
+      an[IllegalArgumentException] must be thrownBy {
         QuartzSchedulerExtension(_system).createSchedule("nonExistingCron", None, "*/10 x * ? * *", None)
       }
     }
@@ -228,7 +234,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       }
 
       receipt must contain(Tock)
-      receipt must have size(5)
+      receipt must have size (5)
     }
   }
 
@@ -236,8 +242,8 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
   case class NewProbe(probe: ActorRef)
   case object Tick
   case object Tock
-  case class TockWithFireTime(scheduledFireTime:Long)
-  case class TockWithFireTimes(previousFireTime:Long, scheduledFireTime:Long, nextFireTime:Long)
+  case class TockWithFireTime(scheduledFireTime: Long)
+  case class TockWithFireTimes(previousFireTime: Long, scheduledFireTime: Long, nextFireTime: Long)
 
   class ScheduleTestReceiver extends Actor with ActorLogging {
     var probe: ActorRef = _
@@ -247,20 +253,17 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       case Tick =>
         log.info(s"Got a Tick.")
         probe ! Tock
-      case MessageWithFireTime(Tick,scheduledFireTime) =>
+      case MessageWithFireTime(Tick, scheduledFireTime) =>
         log.info(s"Got a Tick for ${scheduledFireTime.getTime}.")
         probe ! TockWithFireTime(scheduledFireTime.getTime)
       case MessageWithFireTimes(Tick, previousFireTime, scheduledFireTime, nextFireTime) =>
         log.info(s"Got a Tick for previousFireTime=${previousFireTime} scheduledFireTime=${scheduledFireTime} nextFireTime=${nextFireTime}")
         probe ! TockWithFireTimes(
-          previousFireTime.map(u⇒u.getTime).getOrElse(0),
-          scheduledFireTime.map(u⇒u.getTime).getOrElse(0),
-          nextFireTime.map(u⇒u.getTime).getOrElse(0))
+          previousFireTime.map(u => u.getTime).getOrElse(0),
+          scheduledFireTime.map(u => u.getTime).getOrElse(0),
+          nextFireTime.map(u => u.getTime).getOrElse(0))
     }
   }
-
-
-
 
 }
 
@@ -286,6 +289,13 @@ object SchedulingFunctionalTest {
           }
           cronEvery10SecondsWithFireTime{
           description = "A cron job that fires off every 10 seconds with FireTime"
+          expression = "*/10 * * ? * *"}
+          cronEvery10Seconds {
+            description = "A cron job that fires off every 10 seconds"
+            expression = "*/10 * * ? * *"
+          }
+          cronEvery10SecondsWithFireTimes{
+          description = "A cron job that fires off every 10 seconds with FireTimes"
           expression = "*/10 * * ? * *"}
           cronEvery10Seconds {
             description = "A cron job that fires off every 10 seconds"
