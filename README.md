@@ -75,6 +75,8 @@ change of that sort is fixable without Operations needing to require a recompila
 
 ## Usage
 
+See CHANGELOG.md for a list of changes by release.
+
 Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
 
 ```scala
