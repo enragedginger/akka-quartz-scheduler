@@ -1,5 +1,4 @@
 package com.typesafe.akka.extension.quartz
-package test
 
 import java.util.{Calendar, Date}
 

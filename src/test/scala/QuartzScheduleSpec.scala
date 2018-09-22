@@ -1,5 +1,4 @@
 package com.typesafe.akka.extension.quartz
-package test
 
 import org.specs2.runner.JUnitRunner
 import org.specs2.Specification
@@ -67,7 +66,7 @@ class QuartzScheduleSpec extends Specification with ThrownExpectations { def is 
     val startHour = 3
     val endHour = 22
     // we don't follow the startHour and endHour because of business hours..
-    // the cron exemption rul (taken from quartz docs) actually lets jobs run from 0800 - 1759 (doh)
+    // the cron exemption rule (taken from quartz docs) actually lets jobs run from 0800 - 1759 (doh)
     val numExpectedFirings = (18 - 8) * 60 /* 60 minutes in an hour */ * 2 /* 2 ticks per minute */
     val firings = TriggerUtils.computeFireTimesBetween(t, bizHoursCal, getDate(startHour, 0), getDate(endHour, 0)).asScala
 
