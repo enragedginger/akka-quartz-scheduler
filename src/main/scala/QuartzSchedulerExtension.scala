@@ -182,6 +182,21 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
+   * Unschedules an existing schedule 
+   * 
+   * Cancels the running job and all associated triggers and removes corresponding 
+   * schedule entry from internal schedules map.
+   *
+   * @param name The name of the job, as defined in the schedule
+   * @return Success or Failure in a Boolean
+   */
+  def unscheduleJob(name: String): Boolean = {
+    val isJobCancelled = cancelJob(name)
+    if (isJobCancelled) { removeSchedule(name) }
+    isJobCancelled
+  }
+
+  /**
    * Create a schedule programmatically (must still be scheduled by calling 'schedule')
    *
    * @param name A String identifying the job
