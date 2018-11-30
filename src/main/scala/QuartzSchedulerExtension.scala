@@ -181,6 +181,68 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     // TODO - Exception checking?
   }
 
+  // ==========================================================================  
+  // ====                    fork additions - start                        ====
+  // ==========================================================================
+  
+  // ==========================================================================
+  //     New possible JobSchedule public API - 
+  //     Goal: Simplify jobSchedule management with straight forward create, 
+  //     update, delete operations.
+  // ==========================================================================
+  
+  /**
+   * Creates job, associated triggers and corresponding schedule at once. 
+   * 
+   *
+   * @param name The name of the job, as defined in the schedule
+   * @param receiver An ActorRef, who will be notified each time the schedule fires
+   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
+   * @param description A string describing the purpose of the job
+   * @param cronExpression A string with the cron-type expression
+   * @param calendar An optional calendar to use.
+   * @param timezone The time zone to use if different from default.
+
+   * @return Success or Failure in a Boolean
+   */
+  def createJobSchedule(
+      name: String, receiver: ActorRef, msg: AnyRef, description: Option[String] = None, 
+      cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone) = { 
+    createSchedule(name, description, cronExpression, calendar, timezone)
+    schedule(name, receiver, msg)
+  }  
+
+  /**
+   * Updates job, associated triggers and corresponding schedule at once. 
+   * 
+   *
+   * @param name The name of the job, as defined in the schedule
+   * @param receiver An ActorRef, who will be notified each time the schedule fires
+   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
+   * @param description A string describing the purpose of the job
+   * @param cronExpression A string with the cron-type expression
+   * @param calendar An optional calendar to use.
+   * @param timezone The time zone to use if different from default.
+
+   * @return Success or Failure in a Boolean
+   */  
+  def updateJobSchedule(
+      name: String, receiver: ActorRef, msg: AnyRef, description: Option[String] = None, 
+      cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone): Date = {
+    rescheduleJob(name, receiver, msg, description, cronExpression, calendar, timezone)
+  }  
+  
+  /**
+   * Deletes job, associated triggers and corresponding schedule at once. 
+   * 
+   * Remark: Identical to `unscheduleJob`. Exists to provide consistent naming of related JobSchedule operations. 
+   *
+   * @param name The name of the job, as defined in the schedule
+   * 
+   * @return Success or Failure in a Boolean
+   */
+  def deleteJobSchedule(name: String): Boolean = unscheduleJob(name)
+  
   /**
    * Unschedules an existing schedule 
    * 
@@ -188,6 +250,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * schedule entry from internal schedules map.
    *
    * @param name The name of the job, as defined in the schedule
+   * 
    * @return Success or Failure in a Boolean
    */
   def unscheduleJob(name: String): Boolean = {
