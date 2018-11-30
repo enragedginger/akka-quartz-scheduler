@@ -181,16 +181,6 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     // TODO - Exception checking?
   }
 
-  // ==========================================================================  
-  // ====                    fork additions - start                        ====
-  // ==========================================================================
-  
-  // ==========================================================================
-  //     New possible JobSchedule public API - 
-  //     Goal: Simplify jobSchedule management with straight forward create, 
-  //     update, delete operations.
-  // ==========================================================================
-  
   /**
    * Creates job, associated triggers and corresponding schedule at once. 
    * 
