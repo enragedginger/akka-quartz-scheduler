@@ -193,7 +193,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * @param calendar An optional calendar to use.
    * @param timezone The time zone to use if different from default.
 
-   * @return Success or Failure in a Boolean
+   * @return A date which indicates the first time the trigger will fire.
    */
   def createJobSchedule(
       name: String, receiver: ActorRef, msg: AnyRef, description: Option[String] = None, 
@@ -214,7 +214,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * @param calendar An optional calendar to use.
    * @param timezone The time zone to use if different from default.
 
-   * @return Success or Failure in a Boolean
+   * @return A date which indicates the first time the trigger will fire.
    */  
   def updateJobSchedule(
       name: String, receiver: ActorRef, msg: AnyRef, description: Option[String] = None, 
