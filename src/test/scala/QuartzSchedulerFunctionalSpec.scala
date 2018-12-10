@@ -274,13 +274,14 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       val jobDt = QuartzSchedulerExtension(_system).createJobSchedule(toRescheduleJobName, receiver, Tick, Some("Creating new dynamic schedule for updateJobSchedule test"), "*/4 * * ? * *")      
 
       noException should be thrownBy {
-        val newFirstTimeTriggerDate = QuartzSchedulerExtension(_system).updateJobSchedule(toRescheduleJobName, receiver, Tick, Some("Updating new dynamic schedule for updateJobSchedule test"), "*/42 * * ? * *")   
+        val newFirstTimeTriggerDate = QuartzSchedulerExtension(_system).updateJobSchedule(toRescheduleJobName, receiver, Tick, Some("Updating new dynamic schedule for updateJobSchedule test"), "42 * * ? * *")   
         val jobCalender = Calendar.getInstance()
         jobCalender.setTime(newFirstTimeTriggerDate)
         jobCalender.get(Calendar.SECOND) mustEqual 42
       }
     }    
-    
+
+
     "Delete an existing job schedule Cron Job should throw no error and let creation of new schedule with identical job name" in {
       
       val toDeleteSheduleJobName = "toBeDeletedscheduleCron_1"
@@ -297,7 +298,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
         if (success) {
         
         // Create a new schedule job reusing former toDeleteSheduleJobName. This will fail if delebeJobSchedule is not effective.
-        val newJobDt = QuartzSchedulerExtension(_system).createJobSchedule(toDeleteSheduleJobName, receiver, Tick, Some("Creating new dynamic schedule after deleteJobSchedule success"), "*/8 * * ? * *")        
+        val newJobDt = QuartzSchedulerExtension(_system).createJobSchedule(toDeleteSheduleJobName, receiver, Tick, Some("Creating new dynamic schedule after deleteJobSchedule success"), "8 * * ? * *")        
         val jobCalender = Calendar.getInstance()
         jobCalender.setTime(newJobDt)
         jobCalender.get(Calendar.SECOND) mustEqual 8
