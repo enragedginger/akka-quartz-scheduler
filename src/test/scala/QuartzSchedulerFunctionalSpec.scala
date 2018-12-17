@@ -282,7 +282,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
     }    
 
 
-    "Delete an existing job schedule Cron Job should throw no error and let creation of new schedule with identical job name" in {
+    "Delete an existing job schedule Cron Job without any error and allow successful creation of new schedule with identical job name" in {
       
       val toDeleteSheduleJobName = "toBeDeletedscheduleCron_1"
       
@@ -306,7 +306,27 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
           fail(s"deleteJobSchedule(${toDeleteSheduleJobName}) expected to return true returned false.")
         }
       }
+    }
+    
+    "Delete a non existing job schedule Cron Job with no error and a return value false" in {
+      
+      val nonExistingCronToBeDeleted = "nonExistingCronToBeDeleted"
+      
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+
+      noException should be thrownBy {
+        // Deleting non existing scheduled job 
+        val success = QuartzSchedulerExtension(_system).deleteJobSchedule(nonExistingCronToBeDeleted)
+        // must return false
+        if (success) {
+          fail(s"deleteJobSchedule(${nonExistingCronToBeDeleted}) expected to return false returned true.")
+        } 
+      }
     }    
+    
+    
        
   }  
 
