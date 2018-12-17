@@ -234,7 +234,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   def deleteJobSchedule(name: String): Boolean = unscheduleJob(name)
   
   /**
-   * Unschedules an existing schedule 
+   * Unschedule an existing schedule 
    * 
    * Cancels the running job and all associated triggers and removes corresponding 
    * schedule entry from internal schedules map.
