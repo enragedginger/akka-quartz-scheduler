@@ -380,3 +380,93 @@ OnlyBusinessHours {
 }
 ```
 
+
+### Dynamic create, update, delete `JobSchedule` operations
+
+These `JobSchedule` operations let you programatically manage job and job scheduling 
+all at once.
+*For working examples please check test section:*
+*"The Quartz Scheduling Extension with Dynamic create, update, delete JobSchedule operations"* 
+*in* `com.typesafe.akka.extension.quartz.QuartzSchedulerFunctionalSpec`
+
+
+#### Create JobSchedule
+
+`createJobSchedule` let you create a new job and schedule it all at once: 
+
+
+```scala
+val scheduleJobName : String = "myJobName_1"
+val messageReceiverActor: ActorRef = myActorRef
+val messageSentToReceiver : AnyRef = myCaseClassMessage 
+val scheduleCronExpression: String = "*/10 * * ? * *" // Will fire every ten seconds
+
+try { 
+  scheduler.createJobSchedule(
+  	name = scheduleJobName, 
+  	receiver = messageReceiverActor, 
+  	msg = messageSentToReceiver, 
+  	cronExpression = scheduleCronExpression)
+} catch {
+  case iae: IllegalArgumentException => iae // Do something useful with it.
+}	
+```
+
+In addition you can specify the following optional description, calendar and timezone parameters: 
+
+```scala
+val scheduleJobDescriptionOpt : Option[String] = Some("Scheduled job for test purposes.")
+val aCalendarName: Option[String] = Some("HourOfTheWolf")
+val aTimeZone: java.util.TimeZone = java.util.TimeZone.getTimeZone("UTC")
+
+try { 
+  scheduler.createJobSchedule(
+  	name = scheduleJobName, 
+  	receiver = messageReceiverActor, 
+  	msg = messageSentToReceiver, 
+  	cronExpression = scheduleCronExpression, 
+  	description = Some(job.description), 
+  	calendar = aCalendarName, 
+  	timezone = aTimeZone
+  )
+} catch {
+  case iae: IllegalArgumentException => iae // Do something useful with it.
+}	
+```
+
+#### Update JobSchedule
+
+`updateJobSchedule` has exactely the same signature as create JobSchedule but tries to perform
+an update of an existing `scheduleJobName` 
+
+```scala
+try { 
+  scheduler.updateJobSchedule(
+  	name = scheduleJobName, 
+  	receiver = messageReceiverActor, 
+  	msg = messageSentToReceiver, 
+  	cronExpression = scheduleCronExpression, 
+  	description = Some(job.description), 
+  	calendar = aCalendarName, 
+  	timezone = aTimeZone
+  )
+} catch {
+  case iae: IllegalArgumentException => iae // Do something useful with it.
+}	
+```
+
+#### Delete JobSchedule
+
+```scala
+try {
+  if (scheduler.deleteJobSchedule(name = scheduleJobName)) { 
+    // Do something if deletion succeeded
+  } else {
+    // Do something else if deletion failed
+  }
+} catch {
+  case e: Exception =>
+    // Take action in case an exception is thrown 
+}
+```
+
