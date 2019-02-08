@@ -2,6 +2,11 @@
 
 Every good library has a changelog. Somehow, we didn't have one yet.
 
+## Version 1.8.0 ##
+
+* Previous version: 1.7.1
+* Added functionality for creating / deleting / managing job schedules. PR #79
+
 ## Version 1.7.1 ##
 
 ### Changes ###

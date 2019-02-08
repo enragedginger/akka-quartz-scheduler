@@ -2,11 +2,11 @@ name := "akka-quartz-scheduler"
 
 organization := "com.enragedginger"
 
-version := "1.7.1-akka-2.5.x"
+version := "1.8.0-akka-2.5.x"
 
-scalaVersion in ThisBuild := "2.12.7"
+scalaVersion in ThisBuild := "2.12.8"
 
-crossScalaVersions := Seq("2.11.8", "2.12.7")
+crossScalaVersions := Seq("2.11.8", "2.12.8")
 
 libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor" % "2.5.0" % "provided" ,
