@@ -182,6 +182,74 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   }
 
   /**
+   * Creates job, associated triggers and corresponding schedule at once. 
+   * 
+   *
+   * @param name The name of the job, as defined in the schedule
+   * @param receiver An ActorRef, who will be notified each time the schedule fires
+   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
+   * @param description A string describing the purpose of the job
+   * @param cronExpression A string with the cron-type expression
+   * @param calendar An optional calendar to use.
+   * @param timezone The time zone to use if different from default.
+
+   * @return A date which indicates the first time the trigger will fire.
+   */
+  def createJobSchedule(
+      name: String, receiver: ActorRef, msg: AnyRef, description: Option[String] = None, 
+      cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone) = { 
+    createSchedule(name, description, cronExpression, calendar, timezone)
+    schedule(name, receiver, msg)
+  }  
+
+  /**
+   * Updates job, associated triggers and corresponding schedule at once. 
+   * 
+   *
+   * @param name The name of the job, as defined in the schedule
+   * @param receiver An ActorRef, who will be notified each time the schedule fires
+   * @param msg A message object, which will be sent to `receiver` each time the schedule fires
+   * @param description A string describing the purpose of the job
+   * @param cronExpression A string with the cron-type expression
+   * @param calendar An optional calendar to use.
+   * @param timezone The time zone to use if different from default.
+
+   * @return A date which indicates the first time the trigger will fire.
+   */  
+  def updateJobSchedule(
+      name: String, receiver: ActorRef, msg: AnyRef, description: Option[String] = None, 
+      cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone): Date = {
+    rescheduleJob(name, receiver, msg, description, cronExpression, calendar, timezone)
+  }  
+  
+  /**
+   * Deletes job, associated triggers and corresponding schedule at once. 
+   * 
+   * Remark: Identical to `unscheduleJob`. Exists to provide consistent naming of related JobSchedule operations. 
+   *
+   * @param name The name of the job, as defined in the schedule
+   * 
+   * @return Success or Failure in a Boolean
+   */
+  def deleteJobSchedule(name: String): Boolean = unscheduleJob(name)
+  
+  /**
+   * Unschedule an existing schedule 
+   * 
+   * Cancels the running job and all associated triggers and removes corresponding 
+   * schedule entry from internal schedules map.
+   *
+   * @param name The name of the job, as defined in the schedule
+   * 
+   * @return Success or Failure in a Boolean
+   */
+  def unscheduleJob(name: String): Boolean = {
+    val isJobCancelled = cancelJob(name)
+    if (isJobCancelled) { removeSchedule(name) }
+    isJobCancelled
+  }
+
+  /**
    * Create a schedule programmatically (must still be scheduled by calling 'schedule')
    *
    * @param name A String identifying the job

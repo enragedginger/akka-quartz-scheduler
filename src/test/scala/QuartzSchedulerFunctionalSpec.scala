@@ -211,6 +211,124 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       receipt must have size(5)
     }
   }
+  
+  
+  /**
+   * JobSchedule operations {create, update, delete} combine existing 
+   * QuartzSchedulerExtension {createSchedule, schedule, rescheduleJob} 
+   * and adds deleleteJobSchedule (unscheduleJob synonym created for naming 
+   * consistency with existing rescheduleJob method). 
+   */
+  "The Quartz Scheduling Extension with Dynamic create, update, delete JobSchedule operations" must {
+    "Throw exception if creating job schedule that already exists" in {
+      
+      val alreadyExistingScheduleJobName = "cronEvery10Seconds"
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)      
+      
+      an [IllegalArgumentException] must be thrownBy {
+        QuartzSchedulerExtension(_system).createJobSchedule(alreadyExistingScheduleJobName, receiver, Tick, None, "*/10 * * ? * *", None)
+      }
+    }
+
+    "Throw exception if creating a scheduled job with schedule that has invalid cron expression" in {
+      
+      // Remark: Tests are not completely in isolation as using "nonExistingCron" 
+      // schedule name here would fail because of use and definition in former:
+      // "Add new, schedulable schedule with valid inputs" test. 
+      val nonExistingScheduleJobName = "nonExistingCron_2"
+      
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+
+      an [IllegalArgumentException] must be thrownBy {
+        QuartzSchedulerExtension(_system).createJobSchedule("nonExistingCron_2", receiver, Tick, None, "*/10 x * ? * *", None)
+      }
+    }
+
+    "Add new, schedulable job and schedule with valid inputs" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+
+      val jobDt = QuartzSchedulerExtension(_system).createJobSchedule("nonExistingCron_2", receiver, Tick, Some("Creating new dynamic schedule"), "*/1 * * ? * *", None)
+
+      /* This is a somewhat questionable test as the timing between components may not match the tick off. */
+      val receipt = probe.receiveWhile(Duration(30, SECONDS), Duration(15, SECONDS), 5) {
+        case Tock =>
+          Tock
+      }
+
+      receipt must contain(Tock)
+      receipt must have size(5)
+    }
+    
+    "Reschedule an existing job schedule Cron Job" in {
+      
+      val toRescheduleJobName = "toRescheduleCron_1"
+      
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+
+      val jobDt = QuartzSchedulerExtension(_system).createJobSchedule(toRescheduleJobName, receiver, Tick, Some("Creating new dynamic schedule for updateJobSchedule test"), "*/4 * * ? * *")      
+
+      noException should be thrownBy {
+        val newFirstTimeTriggerDate = QuartzSchedulerExtension(_system).updateJobSchedule(toRescheduleJobName, receiver, Tick, Some("Updating new dynamic schedule for updateJobSchedule test"), "42 * * ? * *")   
+        val jobCalender = Calendar.getInstance()
+        jobCalender.setTime(newFirstTimeTriggerDate)
+        jobCalender.get(Calendar.SECOND) mustEqual 42
+      }
+    }    
+
+
+    "Delete an existing job schedule Cron Job without any error and allow successful creation of new schedule with identical job name" in {
+      
+      val toDeleteSheduleJobName = "toBeDeletedscheduleCron_1"
+      
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+
+      val jobDt = QuartzSchedulerExtension(_system).createJobSchedule(toDeleteSheduleJobName, receiver, Tick, Some("Creating new dynamic schedule for deleteJobSchedule test"), "*/7 * * ? * *")      
+
+      noException should be thrownBy {
+        // Delete existing scheduled job
+        val success = QuartzSchedulerExtension(_system).deleteJobSchedule(toDeleteSheduleJobName)
+        if (success) {
+        
+        // Create a new schedule job reusing former toDeleteSheduleJobName. This will fail if delebeJobSchedule is not effective.
+        val newJobDt = QuartzSchedulerExtension(_system).createJobSchedule(toDeleteSheduleJobName, receiver, Tick, Some("Creating new dynamic schedule after deleteJobSchedule success"), "8 * * ? * *")        
+        val jobCalender = Calendar.getInstance()
+        jobCalender.setTime(newJobDt)
+        jobCalender.get(Calendar.SECOND) mustEqual 8
+        } else {
+          fail(s"deleteJobSchedule(${toDeleteSheduleJobName}) expected to return true returned false.")
+        }
+      }
+    }
+    
+    "Delete a non existing job schedule Cron Job with no error and a return value false" in {
+      
+      val nonExistingCronToBeDeleted = "nonExistingCronToBeDeleted"
+      
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+
+      noException should be thrownBy {
+        // Deleting non existing scheduled job 
+        val success = QuartzSchedulerExtension(_system).deleteJobSchedule(nonExistingCronToBeDeleted)
+        // must return false
+        if (success) {
+          fail(s"deleteJobSchedule(${nonExistingCronToBeDeleted}) expected to return false returned true.")
+        } 
+      }
+    }    
+    
+    
+       
+  }  
 
 
   case class NewProbe(probe: ActorRef)

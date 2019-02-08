@@ -17,3 +17,4 @@ project/plugins/project/
 .idea_modules
 *.iws
 *.ipr
+/bin/
