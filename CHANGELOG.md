@@ -5,7 +5,7 @@ Every good library has a changelog. Somehow, we didn't have one yet.
 ## Version 1.8.0 ##
 
 * Previous version: 1.7.1
-* Added functionality for creating / deleting / managing job schedules. Issue #79, PR #81.
+* Added functionality for creating / deleting / managing job schedules. Issue [#79](https://github.com/enragedginger/akka-quartz-scheduler/issues/79), PR [#81](https://github.com/enragedginger/akka-quartz-scheduler/pull/81).
 
 ## Version 1.7.1 ##
 
