@@ -2,6 +2,10 @@
 
 Every good library has a changelog. Somehow, we didn't have one yet.
 
+## Version 1.8.1 ##
+
+* Added Scala 2.13.0 support.
+
 ## Version 1.8.0 ##
 
 * Previous version: 1.7.1
