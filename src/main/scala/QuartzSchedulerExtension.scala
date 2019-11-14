@@ -16,7 +16,12 @@ import scala.collection.JavaConverters._
 import scala.util.control.Exception._
 
 
-object QuartzSchedulerExtension extends ExtensionKey[QuartzSchedulerExtension] {
+object QuartzSchedulerExtension extends ExtensionId[QuartzSchedulerExtension] with ExtensionIdProvider {
+  override def lookup = QuartzSchedulerExtension
+
+  override def createExtension(system: ExtendedActorSystem): QuartzSchedulerExtension =
+    new QuartzSchedulerExtension(system)
+
   override def get(system: ActorSystem): QuartzSchedulerExtension = super.get(system)
 }
 
