@@ -80,7 +80,10 @@ See CHANGELOG.md for a list of changes by release.
 Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
 
 ```scala
-// For Akka 2.6.x and Scala 2.11.x, 2.12.x, 2.13.x
+// For Akka 2.6.x and Scala 2.12.x, 2.13.x
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.2-akka-2.6.x"
+
+// For Akka 2.6.x and Scala 2.11.x
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.1-akka-2.6.x"
 
 // For Akka 2.5.x and Scala 2.11.x, 2.12.x, 2.13.x

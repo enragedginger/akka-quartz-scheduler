@@ -2,6 +2,10 @@
 
 Every good library has a changelog. Somehow, we didn't have one yet.
 
+## Version 1.8.2 ##
+
+* Added Akka 2.6.0 support by fixing issue with ExtensionKey usage.
+
 ## Version 1.8.1 ##
 
 * Added Scala 2.13.0 support.
