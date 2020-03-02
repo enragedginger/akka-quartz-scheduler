@@ -2,6 +2,10 @@
 
 Every good library has a changelog. Somehow, we didn't have one yet.
 
+## Version 1.8.3 ##
+
+* Marked HikariCP as an excluded dependency due to classpath conflicts with other projects such as Play!. Issue [#83](https://github.com/enragedginger/akka-quartz-scheduler/issues/83).
+
 ## Version 1.8.2 ##
 
 * Added Akka 2.6.0 support by fixing issue with ExtensionKey usage.
