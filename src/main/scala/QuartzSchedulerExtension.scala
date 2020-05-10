@@ -383,7 +383,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    */
   protected def scheduleJob(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date])(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
-    log.info("Setting up scheduled job '{}', with '{}'", name, schedule)
+    log.debug("Setting up scheduled job '{}', with '{}'", name, schedule)
     val jobDataMap = Map[String, AnyRef](
       "logBus" -> system.eventStream,
       "receiver" -> receiver,
@@ -405,6 +405,14 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     val trigger = schedule.buildTrigger(name, startDate)
 
     log.debug("Scheduling Job '{}' and Trigger '{}'. Is Scheduler Running? {}", job, trigger, scheduler.isStarted)
+
+    log.info("Job {} will be triggered {} ({}) {}.",
+      name,
+      schedule.triggerDescription.getOrElse(s"with $trigger"),
+      s"timezone: ${schedule.timezone.toZoneId}",
+      schedule.calendar.map(c => s"with calendar: $c").getOrElse("without calendar")
+    )
+
     scheduler.scheduleJob(job, trigger)
   }
 

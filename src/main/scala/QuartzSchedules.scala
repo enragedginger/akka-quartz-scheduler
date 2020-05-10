@@ -1,12 +1,16 @@
 package com.typesafe.akka.extension.quartz
 
-import com.typesafe.config.{ConfigObject, ConfigException, Config}
+import com.typesafe.config.{Config, ConfigException, ConfigObject}
 import java.util.TimeZone
 import java.util.Date
+
 import scala.util.control.Exception._
 import org.quartz._
+
 import collection.immutable
 import java.text.ParseException
+
+import net.redhogs.cronparser.{CasingTypeEnum, CronExpressionDescriptor, Options}
 
 import scala.collection.JavaConverters._
 
@@ -85,6 +89,10 @@ sealed trait QuartzSchedule {
   //than one calendar anyways.
   def calendar: Option[String]
 
+  def timezone: TimeZone
+
+  def triggerDescription: Option[String]
+
   /**
     * Utility method that builds a trigger with the data this schedule contains, given a name.
     * Job association can happen separately at schedule time.
@@ -120,5 +128,13 @@ final class QuartzCronSchedule(val name: String,
 
   // Do *NOT* build, we need the uncompleted builder. I hate the Quartz API, truly.
   val schedule = CronScheduleBuilder.cronSchedule(expression).inTimeZone(timezone)
+
+
+  def triggerDescription: Option[String] = {
+    val options = new Options
+    options.setTwentyFourHourTime(true)
+    options.setCasingType(CasingTypeEnum.LowerCase)
+    Some(CronExpressionDescriptor.getDescription(expression.getCronExpression, options))
+  }
 }
 
