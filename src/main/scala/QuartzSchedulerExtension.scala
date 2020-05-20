@@ -57,10 +57,9 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    *
    * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
    */
-  val schedules: ConcurrentHashMap[String, QuartzSchedule] = new ConcurrentHashMap[String, QuartzSchedule]
-  QuartzSchedules(config, defaultTimezone).foreach { kv =>
-    schedules.put(kv._1.toUpperCase, kv._2)
-  }
+  val schedules: ConcurrentHashMap[String, QuartzSchedule] = new ConcurrentHashMap[String, QuartzSchedule](
+    QuartzSchedules(config, defaultTimezone).map { case (k, v) => k.toUpperCase -> v }.asJava
+  )
   val runningJobs: ConcurrentHashMap[String, JobKey] = new ConcurrentHashMap[String, JobKey]
 
   log.debug("Configured Schedules: {}", schedules)
