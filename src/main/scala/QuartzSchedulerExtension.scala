@@ -54,11 +54,9 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * Parses job and trigger configurations, preparing them for any code request of a matching job.
    * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
    * and jobs are basically 'idiot' programs who fire off messages.
-   *
-   * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
    */
   val schedules: ConcurrentHashMap[String, QuartzSchedule] = new ConcurrentHashMap[String, QuartzSchedule](
-    QuartzSchedules(config, defaultTimezone).map { case (k, v) => k.toUpperCase -> v }.asJava
+    QuartzSchedules(config, defaultTimezone).asJava
   )
   val runningJobs: ConcurrentHashMap[String, JobKey] = new ConcurrentHashMap[String, JobKey]
 
@@ -267,7 +265,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    */
   def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None,
                      timezone: TimeZone = defaultTimezone) = {
-    schedules.compute(name.toUpperCase, (key: String, value: QuartzSchedule) => {
+    schedules.compute(name, (key: String, value: QuartzSchedule) => {
       Option(value) match {
         case Some(sched) =>
           throw new IllegalArgumentException(s"A schedule with this name already exists: [$key]")
@@ -302,7 +300,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     scheduleInternal(name, receiver, msg, None)
   }
 
-  private def removeSchedule(name: String) = schedules.remove(name.toUpperCase)
+  private def removeSchedule(name: String) = schedules.remove(name)
 
   /**
     * Schedule a job, whose named configuration must be available
@@ -375,7 +373,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     * @param startDate The optional date indicating the earliest time the job may fire.
     * @return A date which indicates the first time the trigger will fire.
     */
-  private def scheduleInternal(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = Option(schedules.get(name.toUpperCase)) match {
+  private def scheduleInternal(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = Option(schedules.get(name)) match {
     case Some(schedule) => scheduleJob(name, receiver, msg, startDate)(schedule)
     case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
