@@ -6,7 +6,7 @@ version := "1.8.3-akka-2.6.x"
 
 scalaVersion in ThisBuild := "2.13.1"
 
-crossScalaVersions := Seq("2.11.8", "2.12.8", "2.13.1")
+crossScalaVersions := Seq("2.12.8", "2.13.1")
 
 libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor" % "2.6.0" % "provided",

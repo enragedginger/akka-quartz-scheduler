@@ -83,9 +83,6 @@ Usage of the `akka-quartz-scheduler` component first requires including the nece
 // For Akka 2.6.x and Scala 2.12.x, 2.13.x
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.3-akka-2.6.x"
 
-// For Akka 2.6.x and Scala 2.11.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.1-akka-2.6.x"
-
 // For Akka 2.5.x and Scala 2.11.x, 2.12.x, 2.13.x
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.1-akka-2.5.x"
 
