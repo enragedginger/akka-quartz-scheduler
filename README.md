@@ -90,6 +90,9 @@ libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.1-a
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.0-akka-2.4.x"
 ```
 
+Note: As of Akka 2.6, [Scala 2.11 is no longer supported](https://doc.akka.io/docs/akka/current/project/migration-guide-2.5.x-2.6.x.html).
+If you wish to use newer versions of akka-quartz-scheduler, but you're stuck on Scala 2.11 for some reason, please open an issue / PR and we'll see what we can do.
+
 ```scala
 //Older versions of the artifact for those that require pre Akka 2.3 or pre Scala 2.11
 //If you would like a current version of the artifact to be published for your required version
