@@ -11,7 +11,6 @@ import org.quartz.impl.DirectSchedulerFactory
 import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
 import org.quartz.spi.JobStore
 
-import scala.collection.{immutable, mutable}
 import scala.collection.JavaConverters._
 import scala.util.control.Exception._
 
@@ -54,11 +53,10 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * Parses job and trigger configurations, preparing them for any code request of a matching job.
    * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
    * and jobs are basically 'idiot' programs who fire off messages.
-   *
-   * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
    */
-  var schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone)
-  val runningJobs: mutable.Map[String, JobKey] = mutable.Map.empty[String, JobKey]
+  val schedules = new scala.collection.concurrent.TrieMap[String, QuartzSchedule]
+  schedules ++= QuartzSchedules(config, defaultTimezone)
+  val runningJobs = new scala.collection.concurrent.TrieMap[String, JobKey]
 
   log.debug("Configured Schedules: {}", schedules)
 
@@ -264,17 +262,18 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    *
    */
   def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None,
-                     timezone: TimeZone = defaultTimezone) = schedules.get(name) match {
-    case Some(sched) =>
-      throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
-    case None =>
-      val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
-        case Left(t) =>
-          throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
-        case Right(expr) => expr
-      }
-      val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
-      schedules += (name -> quartzSchedule)
+                     timezone: TimeZone = defaultTimezone) = {
+    schedules.updateWith(name) {
+      case Some(_) =>
+        throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
+      case None =>
+        val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
+          case Left(t) =>
+            throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
+          case Right(expr) => expr
+        }
+        Some(new QuartzCronSchedule(name, description, expression, timezone, calendar))
+    }
   }
 
   /**
@@ -297,7 +296,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     scheduleInternal(name, receiver, msg, None)
   }
 
-  private def removeSchedule(name: String) = schedules = schedules - name
+  private def removeSchedule(name: String) = schedules -= name
 
   /**
     * Schedule a job, whose named configuration must be available
