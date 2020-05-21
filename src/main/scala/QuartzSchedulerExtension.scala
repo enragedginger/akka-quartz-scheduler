@@ -1,7 +1,6 @@
 package com.typesafe.akka.extension.quartz
 
 import java.text.ParseException
-import java.util.concurrent.ConcurrentHashMap
 import java.util.{Date, TimeZone}
 
 import akka.actor._
