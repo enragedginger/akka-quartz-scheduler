@@ -54,7 +54,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
    * and jobs are basically 'idiot' programs who fire off messages.
    */
-  val schedules = new scala.collection.concurrent.TrieMap[String, QuartzSchedule]()
+  val schedules = new scala.collection.concurrent.TrieMap[String, QuartzSchedule]
   schedules ++= QuartzSchedules(config, defaultTimezone)
   val runningJobs = new scala.collection.concurrent.TrieMap[String, JobKey]
 
