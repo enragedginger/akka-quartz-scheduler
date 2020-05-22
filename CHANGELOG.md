@@ -5,7 +5,7 @@ Every good library has a changelog. Somehow, we didn't have one yet.
 ## Version 1.8.4 ##
 
 * Officially removed support for Scala 2.11 since Akka 2.6+ requires Scala 2.12+. PR [#97](https://github.com/enragedginger/akka-quartz-scheduler/pull/97)
-* Fixed issue with concurrency concerns. Issue [#96](https://github.com/enragedginger/akka-quartz-scheduler/pull/96)
+* Fixed issue with concurrency concerns. Issue [#96](https://github.com/enragedginger/akka-quartz-scheduler/pull/96) and [#98](https://github.com/enragedginger/akka-quartz-scheduler/pull/98)
 
 ## Version 1.8.3 ##
 
