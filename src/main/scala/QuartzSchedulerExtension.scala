@@ -263,16 +263,19 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    */
   def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None,
                      timezone: TimeZone = defaultTimezone) = {
-    schedules.updateWith(name) {
+    val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
+      case Left(t) =>
+        throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
+      case Right(expr) =>
+        expr
+    }
+
+    val schedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
+    schedules.putIfAbsent(name, schedule) match {
       case Some(_) =>
         throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
       case None =>
-        val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
-          case Left(t) =>
-            throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
-          case Right(expr) => expr
-        }
-        Some(new QuartzCronSchedule(name, description, expression, timezone, calendar))
+        ()
     }
   }
 
