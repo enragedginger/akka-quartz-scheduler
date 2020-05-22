@@ -272,8 +272,10 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
 
     val schedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
     schedules.putIfAbsent(name, schedule) match {
-      case Some(_) => throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
-      case None => ()
+      case Some(_) =>
+        throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
+      case None =>
+        ()
     }
   }
 
