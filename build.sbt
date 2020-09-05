@@ -4,9 +4,9 @@ organization := "com.enragedginger"
 
 version := "1.8.5-akka-2.6.x"
 
-scalaVersion in ThisBuild := "2.13.1"
+scalaVersion in ThisBuild := "2.13.3"
 
-crossScalaVersions := Seq("2.12.11", "2.13.1")
+crossScalaVersions := Seq("2.12.12", "2.13.3")
 
 libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor" % "2.6.0" % "provided",
