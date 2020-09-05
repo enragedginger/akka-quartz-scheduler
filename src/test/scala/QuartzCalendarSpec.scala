@@ -169,7 +169,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
           CronOnlyBusinessHours {
             type = Cron
             excludeExpression = "* * 0-7,18-23 ? * *"
-            timezone = "America/San_Francisco"
+            timezone = "America/Los_Angeles"
           }
         }
       """.stripMargin)
