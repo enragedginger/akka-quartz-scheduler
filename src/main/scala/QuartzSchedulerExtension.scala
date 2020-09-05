@@ -5,6 +5,7 @@ import java.util.{Date, TimeZone}
 
 import akka.actor._
 import akka.event.{EventStream, Logging}
+import com.typesafe.config.Config
 import org.quartz._
 import org.quartz.core.jmx.JobDataMapSupport
 import org.quartz.impl.DirectSchedulerFactory
@@ -36,8 +37,9 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   // todo - use of the circuit breaker to encapsulate quartz failures?
   def schedulerName = "QuartzScheduler~%s".format(system.name)
 
-  protected val config = system.settings.config.getConfig("akka.quartz").root.toConfig
+  protected def config: Config = system.settings.config.getConfig("akka.quartz").root.toConfig
 
+  
   // The # of threads in the pool
   val threadCount = config.getInt("threadPool.threadCount")
   require(threadCount >= 1, "Quartz Thread Count (akka.quartz.threadPool.threadCount) must be a positive integer.")
