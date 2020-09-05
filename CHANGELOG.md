@@ -1,6 +1,14 @@
 ## Changelog ##
 
-Every good library has a changelog. Somehow, we didn't have one yet.
+Every good library has a changelog.
+
+## Version 1.8.5 ##
+* Added previous and next firing times to messages where applicable. PR [#80](https://github.com/enragedginger/akka-quartz-scheduler/pull/80)
+* Updated config from val to def to allow it to be overriden. Pr [#100](https://github.com/enragedginger/akka-quartz-scheduler/pull/100)
+* Upgraded the project to SBT 1.3.13 and removed some unnecessary plugins for the project.
+* Some of the tests use America/San_Francisco as a timezone. This timezone doesn't exist, so some time was spent "fixing" this but ultimately the changes
+were mostly reverted. Again, this should only affect the tests and shouldn't affect the library itself.
+* Updated to Scala 2.12.12 and 2.13.3
 
 ## Version 1.8.4 ##
 
