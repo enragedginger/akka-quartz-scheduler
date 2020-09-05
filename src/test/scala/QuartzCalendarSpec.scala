@@ -169,7 +169,7 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
           CronOnlyBusinessHours {
             type = Cron
             excludeExpression = "* * 0-7,18-23 ? * *"
-            timezone = "America/Los_Angeles"
+            timezone = "America/San_Francisco"
           }
         }
       """.stripMargin)
@@ -186,6 +186,6 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
   }
 
 
-  lazy val calendars = QuartzCalendars(sampleConfiguration, TimeZone.getTimeZone("UTC"))
+  lazy val calendars = QuartzCalendars(sampleConfiguration, TimeZone.getDefault)
 
 }
