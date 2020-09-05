@@ -167,7 +167,7 @@ There are situations where the fire time is helpful. For example, when an error 
 being processed and can be recovered.
 
 Here is an example using the case class `MessageRequireFireTime` wrapping the `Tick` message.  This will send a
-`MessageWithFireTime(Tick,scheduledFireTime)` message to a `WorkerActor`:
+`MessageWithFireTime(Tick, previousFireTime, scheduledFireTime, nextFireTime)` message to a `WorkerActor`:
 
 ```scala
 case object Tick
@@ -175,17 +175,6 @@ case object Tick
 val worker = system.actorOf(Props[WorkerActor])
 
 QuartzSchedulerExtension(system).schedule("Every30Seconds", worker, MessageRequireFireTime(Tick))
-```
-
-Here is another example using the case class `MessageRequireFireTimes` wrapping the `Tick` message.  This will send a
-`MessageWithFireTimes(Tick, previousFireTime, scheduledFireTime, nextFireTime)` message to a `WorkerActor`:
-
-```scala
-case object Tick
-
-val worker = system.actorOf(Props[WorkerActor])
-
-QuartzSchedulerExtension(system).schedule("Every30Seconds", worker, MessageRequireFireTimes(Tick))
 ```
 
 ### Configuration of Quartz Scheduler

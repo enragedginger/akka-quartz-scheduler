@@ -53,7 +53,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
       /* This is a somewhat questionable test as the timing between components may not match the tick off. */
       val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
-        case TockWithFireTime(scheduledFireTime) =>
+        case TockWithFireTime(scheduledFireTime, _, _) =>
           scheduledFireTime
       }
       0 until 5 foreach { i =>
@@ -66,19 +66,19 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
       val probe = TestProbe()
       receiver ! NewProbe(probe.ref)
-      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10SecondsWithFireTimes", receiver, MessageRequireFireTime(Tick, AllFiringTimes))
+      val jobDt = QuartzSchedulerExtension(_system).schedule("cronEvery10SecondsWithFireTimes", receiver, MessageRequireFireTime(Tick))
 
       val receipt = probe.receiveWhile(Duration(1, MINUTES), Duration(15, SECONDS), 5) {
-        case TockWithFireTimes(previousFireTime, scheduledFireTime, nextFireTime) =>
-          (previousFireTime, scheduledFireTime, nextFireTime)
+        case TockWithFireTime(scheduledFireTime, previousFireTime, nextFireTime) =>
+          (scheduledFireTime, previousFireTime, nextFireTime)
       }
       0 until 5 foreach { i =>
         val expectedCurrent = jobDt.getTime + i * 10 * 1000
         val expectedPrevious = if (i == 0) 0 else expectedCurrent - 10 * 1000
         val expectedNext = expectedCurrent + 10 * 1000
-        assert(receipt(i)._1 === expectedPrevious +- tickTolerance)
-        assert(receipt(i)._2 === expectedCurrent +- tickTolerance)
-        assert(receipt(i)._3 === expectedNext +- tickTolerance)
+        assert(receipt(i)._1 === expectedCurrent +- tickTolerance)
+        assert(receipt(i)._2.getOrElse(0L) === expectedPrevious +- tickTolerance)
+        assert(receipt(i)._3.get === expectedNext +- tickTolerance)
       }
       receipt must have size (5)
     }
@@ -359,8 +359,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
   case class NewProbe(probe: ActorRef)
   case object Tick
   case object Tock
-  case class TockWithFireTime(scheduledFireTime: Long)
-  case class TockWithFireTimes(previousFireTime: Long, scheduledFireTime: Long, nextFireTime: Long)
+  case class TockWithFireTime(scheduledFireTime: Long, previousFireTime: Option[Long], nextFireTime: Option[Long])
 
   class ScheduleTestReceiver extends Actor with ActorLogging {
     var probe: ActorRef = _
@@ -370,15 +369,12 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       case Tick =>
         log.info(s"Got a Tick.")
         probe ! Tock
-      case MessageWithFireTime(Tick, scheduledFireTime) =>
-        log.info(s"Got a Tick for ${scheduledFireTime.getTime}.")
-        probe ! TockWithFireTime(scheduledFireTime.getTime)
-      case MessageWithFireTimes(Tick, previousFireTime, scheduledFireTime, nextFireTime) =>
-        log.info(s"Got a Tick for previousFireTime=${previousFireTime} scheduledFireTime=${scheduledFireTime} nextFireTime=${nextFireTime}")
-        probe ! TockWithFireTimes(
-          previousFireTime.map(u => u.getTime).getOrElse(0),
-          scheduledFireTime.map(u => u.getTime).getOrElse(0),
-          nextFireTime.map(u => u.getTime).getOrElse(0))
+      case MessageWithFireTime(Tick, scheduledFireTime, previousFireTime, nextFireTime) =>
+        log.info(s"Got a Tick for scheduledFireTime=${scheduledFireTime}  previousFireTime=${previousFireTime}nextFireTime=${nextFireTime}")
+        probe ! TockWithFireTime(
+          scheduledFireTime.getTime,
+          previousFireTime.map(u => u.getTime),
+          nextFireTime.map(u => u.getTime))
     }
   }
 

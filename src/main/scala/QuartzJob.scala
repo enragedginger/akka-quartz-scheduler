@@ -82,15 +82,13 @@ class SimpleActorMessageJob extends Job {
        * so this casting (and the initial save into the map) may involve boxing.
        **/
       val msg = dataMap.get("message") match {
-        case MessageRequireFireTime(m, f) =>
-          f match {
-            case NextFiringTime => MessageWithFireTime(m, context.getNextFireTime)
-            case CurrentFiringTime => MessageWithFireTime(m, context.getScheduledFireTime)
-            case PreviousFiringTime => MessageWithFireTime(m, context.getPreviousFireTime)
-            case AllFiringTimes => MessageWithFireTimes(m, Option(context.getPreviousFireTime), Option(context.getScheduledFireTime), Option(context.getNextFireTime))
-            case _ => throw new JobExecutionException("required fire time type is not handled type, must be Next, Current or Previous, was %s".format(f))
-          }
-        case any:Any => any
+        case MessageRequireFireTime(msg) =>
+          MessageWithFireTime(msg = msg,
+            scheduledFireTime = context.getScheduledFireTime,
+            previousFiringTime = Option(context.getPreviousFireTime),
+            nextFiringTime = Option(context.getNextFireTime)
+          )
+        case any: Any => any
       }
       val log = Logging(logBus, this)
       log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
