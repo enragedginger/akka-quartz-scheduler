@@ -1,8 +1,8 @@
 package com.typesafe.akka.extension.quartz
 
-import org.quartz.{Job, JobDataMap, JobExecutionContext, JobExecutionException}
+import akka.actor.{ActorRef, ActorSelection, typed}
 import akka.event.{EventStream, Logging, LoggingBus}
-import akka.actor.{ActorRef, ActorSelection}
+import org.quartz.{Job, JobDataMap, JobExecutionContext, JobExecutionException}
 
 /**
  * Base trait, in case we decide to diversify down the road
@@ -94,6 +94,7 @@ class SimpleActorMessageJob extends Job {
       log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
       receiver match {
         case ref: ActorRef => ref ! msg
+        case ref: typed.ActorRef[AnyRef] => ref ! msg
         case selection: ActorSelection => selection ! msg
         case eventStream: EventStream => eventStream.publish(msg)
         case _ => throw new JobExecutionException("receiver as not expected type, must be ActorRef or ActorSelection, was %s".format(receiver.getClass))

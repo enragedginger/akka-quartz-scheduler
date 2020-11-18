@@ -14,13 +14,13 @@ libraryDependencies ++= Seq(
     "org.quartz-scheduler" % "quartz" % "2.3.2" exclude ("com.zaxxer", "HikariCP-java7"),
     // test dependencies
     "com.typesafe.akka" %% "akka-testkit" % "2.6.10" % "test",
-    "com.typesafe.akka" %% "akka-testkit" % "2.6.10" % "test",
+    "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.10" % "test",
     "org.specs2" %% "specs2-core" % "4.5.1" % "test",
     "org.specs2" %% "specs2-junit" % "4.5.1" % "test",
     "junit" % "junit" % "4.12" % "test",
     "org.slf4j" % "slf4j-api" % "1.7.21" % "test",
     "org.slf4j" % "slf4j-jcl" % "1.7.21" % "test",
-    "org.scalatest" %% "scalatest" % "3.0.8" % "test"
+    "org.scalatest" %% "scalatest" % "3.1.4" % "test"
 )
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
