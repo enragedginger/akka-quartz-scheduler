@@ -29,7 +29,7 @@ object QuartzSchedulerExtension extends ExtensionId[QuartzSchedulerExtension] wi
  * Note that this extension will only be instantiated *once* *per actor system*.
  *
  */
-class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
+class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
 
   private val log = Logging(system, this)
 
