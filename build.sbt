@@ -10,10 +10,10 @@ crossScalaVersions := Seq("2.12.12", "2.13.3")
 
 libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-actor" % "2.6.0" % "provided",
-    "com.typesafe.akka" %% "akka-actor-typed" % "2.6.10",
+    "com.typesafe.akka" %% "akka-actor-typed" % "2.6.10" % "provided",
     "org.quartz-scheduler" % "quartz" % "2.3.2" exclude ("com.zaxxer", "HikariCP-java7"),
     // test dependencies
-    "com.typesafe.akka" %% "akka-testkit" % "2.6.0" % "test",
+    "com.typesafe.akka" %% "akka-testkit" % "2.6.10" % "test",
     "com.typesafe.akka" %% "akka-testkit" % "2.6.10" % "test",
     "org.specs2" %% "specs2-core" % "4.5.1" % "test",
     "org.specs2" %% "specs2-junit" % "4.5.1" % "test",
