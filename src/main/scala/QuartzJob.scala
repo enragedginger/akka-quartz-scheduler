@@ -69,7 +69,7 @@ class SimpleActorMessageJob extends Job {
    * @throws JobExecutionException
    */
   def execute(context: JobExecutionContext) {
-    implicit val dataMap = context.getJobDetail.getJobDataMap
+    implicit val dataMap: JobDataMap = context.getJobDetail.getJobDataMap
     val key  = context.getJobDetail.getKey
 
     try {
