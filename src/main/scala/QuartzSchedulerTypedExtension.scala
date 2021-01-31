@@ -1,9 +1,8 @@
 package com.typesafe.akka.extension.quartz
 
-import java.util.{Date, TimeZone}
-
-import akka.actor.ExtendedActorSystem
 import akka.actor.typed.{ActorRef, ActorSystem, Extension, ExtensionId}
+
+import java.util.{Date, TimeZone}
 
 object QuartzSchedulerTypedExtension extends ExtensionId[QuartzSchedulerTypedExtension] {
 
