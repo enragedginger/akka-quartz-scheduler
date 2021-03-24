@@ -2,14 +2,14 @@ name := "akka-quartz-scheduler"
 
 organization := "com.enragedginger"
 
-version := "1.8.5-akka-2.6.x"
+version := "1.9.0-akka-2.6.x"
 
 scalaVersion in ThisBuild := "2.13.3"
 
 crossScalaVersions := Seq("2.12.12", "2.13.3")
 
 libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-actor" % "2.6.0" % "provided",
+    "com.typesafe.akka" %% "akka-actor" % "2.6.10" % "provided",
     "com.typesafe.akka" %% "akka-actor-typed" % "2.6.10" % "provided",
     "org.quartz-scheduler" % "quartz" % "2.3.2" exclude ("com.zaxxer", "HikariCP-java7"),
     // test dependencies
@@ -20,7 +20,7 @@ libraryDependencies ++= Seq(
     "junit" % "junit" % "4.12" % "test",
     "org.slf4j" % "slf4j-api" % "1.7.21" % "test",
     "org.slf4j" % "slf4j-jcl" % "1.7.21" % "test",
-    "org.scalatest" %% "scalatest" % "3.1.4" % "test"
+    "org.scalatest" %% "scalatest" % "3.2.6" % "test"
 )
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
