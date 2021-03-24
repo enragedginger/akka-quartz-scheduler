@@ -80,6 +80,9 @@ See CHANGELOG.md for a list of changes by release.
 Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
 
 ```scala
+// For Akka 2.6.x and Akka Typed Actors 2.6.x and Scala 2.12.x, 2.13.x
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.9.0-akka-2.6.x"
+
 // For Akka 2.6.x and Scala 2.12.x, 2.13.x
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.5-akka-2.6.x"
 
@@ -112,9 +115,49 @@ libraryDependencies += "com.typesafe.akka" % "akka-quartz-scheduler_2.10" % "1.4
 
 Note that the version name includes the Akka revision (Previous releases included the Akka release in the artifact name, which broken Maven).
 
-Then, from within your Akka project you can create and access a Scheduler:
+### Akka Typed Actor (2.6.x)
+If you use newer Akka Actor version then, from within your Akka project you can create and access a Typed Scheduler:
 
 ```scala
+// Akka Typed Actors sample.
+import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension
+
+val scheduler = QuartzSchedulerTypedExtension(typedSystem)
+
+```
+
+Where `typedSystem` represents an instance of an Akka Typed `ActorSystem[-T]` – note that `QuartzSchedulerTypedExtension` 
+is scoped to that `ActorSystem[-T]` and there will only ever be one instance of it per `ActorSystem[-T]`.
+
+The primary external method on the `scheduler` instance is `schedule`, used for scheduling a job:
+
+```scala
+def scheduleTyped[T](name: String, receiver: ActorRef[T], msg: T): java.util.Date
+```
+OR
+```scala
+def scheduleTyped[T](name: String, receiver: ActorRef[T], msg: T, startDate: Option[Date]): java.util.Date
+```
+
+The arguments to schedule are:
+
+- `name`: A `String` identifying the name of this schedule. This *must* match a schedule present in the configuration
+- `receiver`: A typed `ActorRef[T]`, who will be sent `msg` each time the schedule fires
+- `msg`: An instance of `A`, representing a message instance which will be sent to `receiver` each time the schedule fires
+- `startDate`: An optional `Date`, for postponed start of a job. Defaults to now.
+
+Invoking `scheduleTyped[A]` returns an instance of `java.util.Date`, representing the first time the newly setup schedule
+will fire.
+
+Each time the Quartz schedule trigger fires, Quartz will send a copy of `msg` to your `receiver` actor.
+
+Note that you can use the same logic for scheduling Quartz with Akka Typed Actor as the older version.
+
+### Akka Actor (2.5.x)
+If you use old Akka Actor version then, from within your Akka project you can create and access a Scheduler:
+
+```scala
+// Akka Actors sample.
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
 
 val scheduler = QuartzSchedulerExtension(system)

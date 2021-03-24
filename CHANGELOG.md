@@ -2,6 +2,12 @@
 
 Every good library has a changelog.
 
+## Version 1.9.0 ##
+* Added [Akka Typed Actor](https://doc.akka.io/docs/akka/2.5.32/typed/) compatibility. PR [#102](https://github.com/enragedginger/akka-quartz-scheduler/pull/102)
+* Upgrade Akka Actor to 2.6.10 version.
+* Upgrade Akka Test Kit to 2.6.10 version.
+* Extract Functional Test Sample Configuration to it's own class.
+
 ## Version 1.8.5 ##
 * Added previous and next firing times to messages where applicable. PR [#80](https://github.com/enragedginger/akka-quartz-scheduler/pull/80)
 * Updated config from val to def to allow it to be overriden. Pr [#100](https://github.com/enragedginger/akka-quartz-scheduler/pull/100)
