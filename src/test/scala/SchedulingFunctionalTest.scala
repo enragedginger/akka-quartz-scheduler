@@ -3,6 +3,9 @@ package com.typesafe.akka.extension.quartz
 import com.typesafe.config.{Config, ConfigFactory}
 
 object SchedulingFunctionalTest {
+
+  val tickTolerance = 1000
+
   lazy val sampleConfiguration: Config = { ConfigFactory.parseString("""
     akka {
       event-handlers = ["akka.testkit.TestEventListener"]
@@ -22,16 +25,18 @@ object SchedulingFunctionalTest {
             description = "A cron job that fires off every 10 seconds"
             expression = "*/12 * * ? * *"
           }
-          cronEvery10SecondsWithFireTime{
-          description = "A cron job that fires off every 10 seconds with FireTime"
-          expression = "*/10 * * ? * *"}
+          cronEvery10SecondsWithFireTime {
+            description = "A cron job that fires off every 10 seconds with FireTime"
+            expression = "*/10 * * ? * *"
+          }
           cronEvery10Seconds {
             description = "A cron job that fires off every 10 seconds"
             expression = "*/10 * * ? * *"
           }
-          cronEvery10SecondsWithFireTimes{
-          description = "A cron job that fires off every 10 seconds with FireTimes"
-          expression = "*/10 * * ? * *"}
+          cronEvery10SecondsWithFireTimes {
+            description = "A cron job that fires off every 10 seconds with FireTimes"
+            expression = "*/10 * * ? * *"
+          }
           cronEvery10Seconds {
             description = "A cron job that fires off every 10 seconds"
             expression = "*/10 * * ? * *"
