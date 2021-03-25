@@ -29,7 +29,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
   "The Quartz Scheduling Extension" must {
 
-    val tickTolerance = 1000 // 1000 millisecond tolerance
+    val tickTolerance = SchedulingFunctionalTest.tickTolerance
 
     "Reject a job which is not named in the config" in {
       val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
