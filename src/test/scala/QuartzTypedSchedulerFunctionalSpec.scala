@@ -139,7 +139,7 @@ class QuartzTypedSchedulerFunctionalSpec
       var receipt = Seq[AnyRef]()
       an[AssertionError] must be thrownBy {
         /* This is a somewhat questionable test as the timing between components may not match the tick off. */
-        receipt = probe.receiveMessages(2, Duration(10, SECONDS))
+        receipt = probe.receiveMessages(2, Duration(30, SECONDS))
       }
       receipt must have size (0)
 
