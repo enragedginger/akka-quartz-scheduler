@@ -2,6 +2,12 @@
 
 Every good library has a changelog.
 
+## Version 1.9.1 ##
+* Fixed `Delayed Setup & Execute a Cron Job` test case at `QuartzTypedSchedulerFunctionalSpec`.
+* Updated to Scala `2.12.13` and `2.13.5`.
+* Updated TravisCI to build with new Scala Versions.
+* Added OpenJDK11 stage on TravisCI.
+
 ## Version 1.9.0 ##
 * Added [Akka Typed Actor](https://doc.akka.io/docs/akka/2.5.32/typed/) compatibility. PR [#102](https://github.com/enragedginger/akka-quartz-scheduler/pull/102)
 * Upgrade Akka Actor to 2.6.10 version.
