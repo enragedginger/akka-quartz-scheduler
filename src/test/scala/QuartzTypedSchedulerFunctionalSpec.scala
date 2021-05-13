@@ -1,5 +1,6 @@
 package com.typesafe.akka.extension.quartz
 
+import akka.actor.testkit.typed.FishingOutcome
 import akka.actor.testkit.typed.scaladsl.ActorTestKit
 import akka.actor.typed.eventstream.EventStream
 import akka.actor.typed.eventstream.EventStream.Subscribe
@@ -139,7 +140,14 @@ class QuartzTypedSchedulerFunctionalSpec
       var receipt = Seq[AnyRef]()
       an[AssertionError] must be thrownBy {
         /* This is a somewhat questionable test as the timing between components may not match the tick off. */
-        receipt = probe.receiveMessages(2, Duration(30, SECONDS))
+        var maxMessages = 2
+        receipt = probe.fishForMessage(Duration(30, SECONDS)) {
+          case Tock =>
+            maxMessages -= 1
+            if (maxMessages == 0) FishingOutcome.Complete
+            else FishingOutcome.Continue
+          case _ => FishingOutcome.ContinueAndIgnore
+        }
       }
       receipt must have size (0)
 
