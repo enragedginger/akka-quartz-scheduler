@@ -237,6 +237,16 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
    * @return Success or Failure in a Boolean
    */
   def deleteJobSchedule(name: String): Boolean = unscheduleJob(name)
+
+  /**
+   * Deletes all jobs in the scheduler
+   */
+  def deleteAll(): Unit = {
+    log.info("Deleting all Quartz jobs.")
+    runningJobs.clear()
+    schedules.clear()
+    scheduler.clear()
+  }
   
   /**
    * Unschedule an existing schedule 
