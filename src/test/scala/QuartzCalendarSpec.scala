@@ -186,6 +186,6 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
   }
 
 
-  lazy val calendars = QuartzCalendars(sampleConfiguration, TimeZone.getTimeZone("UTC"))
+  lazy val calendars = QuartzCalendars(sampleConfiguration, TimeZone.getDefault)
 
 }

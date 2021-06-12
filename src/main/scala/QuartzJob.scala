@@ -1,8 +1,8 @@
 package com.typesafe.akka.extension.quartz
 
-import org.quartz.{Job, JobDataMap, JobExecutionContext, JobExecutionException}
+import akka.actor.{ActorRef, ActorSelection, typed}
 import akka.event.{EventStream, Logging, LoggingBus}
-import akka.actor.{ActorRef, ActorSelection}
+import org.quartz.{Job, JobDataMap, JobExecutionContext, JobExecutionException}
 
 /**
  * Base trait, in case we decide to diversify down the road
@@ -69,7 +69,7 @@ class SimpleActorMessageJob extends Job {
    * @throws JobExecutionException
    */
   def execute(context: JobExecutionContext) {
-    implicit val dataMap = context.getJobDetail.getJobDataMap
+    implicit val dataMap: JobDataMap = context.getJobDetail.getJobDataMap
     val key  = context.getJobDetail.getKey
 
     try {
@@ -82,14 +82,19 @@ class SimpleActorMessageJob extends Job {
        * so this casting (and the initial save into the map) may involve boxing.
        **/
       val msg = dataMap.get("message") match {
-        case MessageRequireFireTime(m) =>
-          MessageWithFireTime(m,context.getScheduledFireTime)
-        case any:Any => any
+        case MessageRequireFireTime(msg) =>
+          MessageWithFireTime(msg = msg,
+            scheduledFireTime = context.getScheduledFireTime,
+            previousFiringTime = Option(context.getPreviousFireTime),
+            nextFiringTime = Option(context.getNextFireTime)
+          )
+        case any: Any => any
       }
       val log = Logging(logBus, this)
       log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
       receiver match {
         case ref: ActorRef => ref ! msg
+        case ref: typed.ActorRef[AnyRef] => ref ! msg
         case selection: ActorSelection => selection ! msg
         case eventStream: EventStream => eventStream.publish(msg)
         case _ => throw new JobExecutionException("receiver as not expected type, must be ActorRef or ActorSelection, was %s".format(receiver.getClass))

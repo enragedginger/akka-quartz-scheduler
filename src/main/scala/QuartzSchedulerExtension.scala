@@ -5,13 +5,13 @@ import java.util.{Date, TimeZone}
 
 import akka.actor._
 import akka.event.{EventStream, Logging}
+import com.typesafe.config.Config
 import org.quartz._
 import org.quartz.core.jmx.JobDataMapSupport
 import org.quartz.impl.DirectSchedulerFactory
 import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
 import org.quartz.spi.JobStore
 
-import scala.collection.{immutable, mutable}
 import scala.collection.JavaConverters._
 import scala.util.control.Exception._
 
@@ -29,7 +29,7 @@ object QuartzSchedulerExtension extends ExtensionId[QuartzSchedulerExtension] wi
  * Note that this extension will only be instantiated *once* *per actor system*.
  *
  */
-class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
+class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
 
   private val log = Logging(system, this)
 
@@ -37,8 +37,9 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
   // todo - use of the circuit breaker to encapsulate quartz failures?
   def schedulerName = "QuartzScheduler~%s".format(system.name)
 
-  protected val config = system.settings.config.getConfig("akka.quartz").root.toConfig
+  protected def config: Config = system.settings.config.getConfig("akka.quartz").root.toConfig
 
+  
   // The # of threads in the pool
   val threadCount = config.getInt("threadPool.threadCount")
   require(threadCount >= 1, "Quartz Thread Count (akka.quartz.threadPool.threadCount) must be a positive integer.")
@@ -54,11 +55,10 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    * Parses job and trigger configurations, preparing them for any code request of a matching job.
    * In our world, jobs and triggers are essentially 'merged'  - our scheduler is built around triggers
    * and jobs are basically 'idiot' programs who fire off messages.
-   *
-   * RECAST KEY AS UPPERCASE TO AVOID RUNTIME LOOKUP ISSUES
    */
-  var schedules: immutable.Map[String, QuartzSchedule] = QuartzSchedules(config, defaultTimezone)
-  val runningJobs: mutable.Map[String, JobKey] = mutable.Map.empty[String, JobKey]
+  val schedules = new scala.collection.concurrent.TrieMap[String, QuartzSchedule]
+  schedules ++= QuartzSchedules(config, defaultTimezone)
+  val runningJobs = new scala.collection.concurrent.TrieMap[String, JobKey]
 
   log.debug("Configured Schedules: {}", schedules)
 
@@ -264,17 +264,21 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    *
    */
   def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None,
-                     timezone: TimeZone = defaultTimezone) = schedules.get(name) match {
-    case Some(sched) =>
-      throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
-    case None =>
-      val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
-        case Left(t) =>
-          throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
-        case Right(expr) => expr
-      }
-      val quartzSchedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
-      schedules += (name -> quartzSchedule)
+                     timezone: TimeZone = defaultTimezone) {
+    val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
+      case Left(t) =>
+        throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
+      case Right(expr) =>
+        expr
+    }
+
+    val schedule = new QuartzCronSchedule(name, description, expression, timezone, calendar)
+    schedules.putIfAbsent(name, schedule) match {
+      case Some(_) =>
+        throw new IllegalArgumentException(s"A schedule with this name already exists: [$name]")
+      case None =>
+        ()
+    }
   }
 
   /**
@@ -297,7 +301,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     scheduleInternal(name, receiver, msg, None)
   }
 
-  private def removeSchedule(name: String) = schedules = schedules - name
+  private[quartz] def removeSchedule(name: String) = schedules -= name
 
   /**
     * Schedule a job, whose named configuration must be available
@@ -370,7 +374,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
     * @param startDate The optional date indicating the earliest time the job may fire.
     * @return A date which indicates the first time the trigger will fire.
     */
-  private def scheduleInternal(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = schedules.get(name) match {
+  private[quartz] def scheduleInternal(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date]): Date = schedules.get(name) match {
     case Some(schedule) => scheduleJob(name, receiver, msg, startDate)(schedule)
     case None => throw new IllegalArgumentException("No matching quartz configuration found for schedule '%s'".format(name))
   }
@@ -381,7 +385,7 @@ class QuartzSchedulerExtension(system: ExtendedActorSystem) extends Extension {
    *
    * @return A date, which indicates the first time the trigger will fire.
    */
-  protected def scheduleJob(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date])(schedule: QuartzSchedule): Date = {
+  private[quartz] def scheduleJob(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date])(schedule: QuartzSchedule): Date = {
     import scala.collection.JavaConverters._
     log.debug("Setting up scheduled job '{}', with '{}'", name, schedule)
     val jobDataMap = Map[String, AnyRef](
