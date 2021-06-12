@@ -80,11 +80,11 @@ See CHANGELOG.md for a list of changes by release.
 Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
 
 ```scala
-// For Akka 2.6.x and Scala 2.12.x, 2.13.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.3-akka-2.6.x"
+// For Akka 2.6.x and Akka Typed Actors 2.6.x and Scala 2.12.x, 2.13.x
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.9.1-akka-2.6.x"
 
-// For Akka 2.6.x and Scala 2.11.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.1-akka-2.6.x"
+// For Akka 2.6.x and Scala 2.12.x, 2.13.x
+libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.5-akka-2.6.x"
 
 // For Akka 2.5.x and Scala 2.11.x, 2.12.x, 2.13.x
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.1-akka-2.5.x"
@@ -92,6 +92,9 @@ libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.1-a
 // For Akka 2.4.x and Scala 2.11.x, 2.12.x
 libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.0-akka-2.4.x"
 ```
+
+Note: As of Akka 2.6, [Scala 2.11 is no longer supported](https://doc.akka.io/docs/akka/current/project/migration-guide-2.5.x-2.6.x.html).
+If you wish to use newer versions of akka-quartz-scheduler, but you're stuck on Scala 2.11 for some reason, please open an issue / PR and we'll see what we can do.
 
 ```scala
 //Older versions of the artifact for those that require pre Akka 2.3 or pre Scala 2.11
@@ -112,9 +115,49 @@ libraryDependencies += "com.typesafe.akka" % "akka-quartz-scheduler_2.10" % "1.4
 
 Note that the version name includes the Akka revision (Previous releases included the Akka release in the artifact name, which broken Maven).
 
-Then, from within your Akka project you can create and access a Scheduler:
+### Akka Typed Actor (2.6.x)
+If you use newer Akka Actor version then, from within your Akka project you can create and access a Typed Scheduler:
 
 ```scala
+// Akka Typed Actors sample.
+import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension
+
+val scheduler = QuartzSchedulerTypedExtension(typedSystem)
+
+```
+
+Where `typedSystem` represents an instance of an Akka Typed `ActorSystem[-T]` – note that `QuartzSchedulerTypedExtension` 
+is scoped to that `ActorSystem[-T]` and there will only ever be one instance of it per `ActorSystem[-T]`.
+
+The primary external method on the `scheduler` instance is `schedule`, used for scheduling a job:
+
+```scala
+def scheduleTyped[T](name: String, receiver: ActorRef[T], msg: T): java.util.Date
+```
+OR
+```scala
+def scheduleTyped[T](name: String, receiver: ActorRef[T], msg: T, startDate: Option[Date]): java.util.Date
+```
+
+The arguments to schedule are:
+
+- `name`: A `String` identifying the name of this schedule. This *must* match a schedule present in the configuration
+- `receiver`: A typed `ActorRef[T]`, who will be sent `msg` each time the schedule fires
+- `msg`: An instance of `A`, representing a message instance which will be sent to `receiver` each time the schedule fires
+- `startDate`: An optional `Date`, for postponed start of a job. Defaults to now.
+
+Invoking `scheduleTyped[A]` returns an instance of `java.util.Date`, representing the first time the newly setup schedule
+will fire.
+
+Each time the Quartz schedule trigger fires, Quartz will send a copy of `msg` to your `receiver` actor.
+
+Note that you can use the same logic for scheduling Quartz with Akka Typed Actor as the older version.
+
+### Akka Actor (2.5.x)
+If you use old Akka Actor version then, from within your Akka project you can create and access a Scheduler:
+
+```scala
+// Akka Actors sample.
 import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
 
 val scheduler = QuartzSchedulerExtension(system)
@@ -163,9 +206,11 @@ The details on the configuration of a job is outlined below in the section '*Sch
 
 ### Returning scheduled Fire Time
 
-Sometimes we need to know the trigger time, with which we can known which job instance is being processed. so when an error occours,we can recover that with the same event,because the event contains the fire time.
+There are situations where the fire time is helpful. For example, when an error occurs, we know which job trigger is 
+being processed and can be recovered.
 
-Here is an example,using the case class MessageRequireFireTime wrapping the Tick message, which will send a `MessageWithFireTime(Tick,scheduledFireTime)` message to a `WorkerActor`:
+Here is an example using the case class `MessageRequireFireTime` wrapping the `Tick` message.  This will send a
+`MessageWithFireTime(Tick, previousFireTime, scheduledFireTime, nextFireTime)` message to a `WorkerActor`:
 
 ```scala
 case object Tick
@@ -174,7 +219,6 @@ val worker = system.actorOf(Props[WorkerActor])
 
 QuartzSchedulerExtension(system).schedule("Every30Seconds", worker, MessageRequireFireTime(Tick))
 ```
-
 
 ### Configuration of Quartz Scheduler
 
@@ -318,7 +362,7 @@ follows a time format of `HH:MM[:SS[:mmm]]` where:
     - SS is the **optional** second of the specified time, and must be in the range 0-59
     - mmm is the **optional** millisecond of the specified time, and must be in the range 0-999
 
-An example, which  doesn't allow jobs to run between 3AM and 5AM during the PST Timezone:
+An example, which doesn't allow jobs to run between 3AM and 5AM during the PST Timezone:
 
 ```
 HourOfTheWolf {
