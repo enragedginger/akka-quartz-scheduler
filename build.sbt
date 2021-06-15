@@ -4,7 +4,7 @@ organization := "com.enragedginger"
 
 version := "1.9.1-akka-2.6.x"
 
-scalaVersion in ThisBuild := "2.13.5"
+ThisBuild / scalaVersion := "2.13.5"
 
 crossScalaVersions := Seq("2.12.13", "2.13.5")
 
@@ -39,7 +39,7 @@ publishTo := {
 
 //useGpg := true
 
-pomExtra := (<url>https://github.com/enragedginger/akka-quartz-scheduler</url>
+pomExtra := <url>https://github.com/enragedginger/akka-quartz-scheduler</url>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -56,4 +56,4 @@ pomExtra := (<url>https://github.com/enragedginger/akka-quartz-scheduler</url>
             <name>Stephen M. Hopper</name>
             <email>stephen@enragedginger.com</email>
         </developer>
-    </developers>)
+    </developers>
