@@ -520,3 +520,48 @@ try {
 }
 ```
 
+### Mass operations suspendAll, resumeAll, deleteAll
+
+These mass operations let you manage many `JobSchedule`s at once.
+*For working examples please check test section:*
+*"The Quartz Scheduling Extension with Dynamic mass methods"*
+*in* `com.typesafe.akka.extension.quartz.QuartzSchedulerFunctionalSpec`
+
+#### Suspend All Schedules
+
+Suspends (pauses) all jobs in the scheduler.
+
+```scala
+try {
+  scheduler.suspendAll()
+} catch {
+  case e: SchedulerException =>
+    // Take action in case an exception is thrown 
+}
+```
+
+#### Resume All Schedules
+
+Unpauses all paused jobs in the scheduler.
+
+```scala
+try {
+  scheduler.resumeAll()
+} catch {
+  case e: SchedulerException =>
+    // Take action in case an exception is thrown 
+}
+```
+
+#### Delete All Schedules
+
+Deletes all jobs in the scheduler without shutting down the scheduler.
+
+```scala
+try {
+  scheduler.deleteAll()
+} catch {
+  case e: SchedulerException =>
+    // Take action in case an exception is thrown 
+}
+```
