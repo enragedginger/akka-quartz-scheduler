@@ -355,6 +355,45 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
 
   }
 
+  /**
+   * Mass operations {suspendAll, resumeAll, deleteAll} combine existing
+   * QuartzSchedulerExtension {pauseAll, resumeAll} and adds deleteAll
+   * (suspend synonym for pause for consistency).
+   */
+  "The Quartz Scheduling Extension with Dynamic mass methods" should {
+
+    "Suspend all jobs" ignore {/* TODO implement */}
+
+    "Resume all jobs" ignore {/* TODO implement */}
+
+    "Delete all jobs" in {
+      val receiver = _system.actorOf(Props(new ScheduleTestReceiver))
+      val probe = TestProbe()
+      receiver ! NewProbe(probe.ref)
+      val toBeDeletedAllJobName1 = "toBeDeletedAll_1"
+      val toBeDeletedAllJobName2 = "toBeDeletedAll_2"
+      val jobDt1 = QuartzSchedulerExtension(_system).createJobSchedule(toBeDeletedAllJobName1, receiver, Tick, Some("Creating new dynamic schedule for deleteAll test"), "*/7 * * ? * *")
+      val jobDt2 = QuartzSchedulerExtension(_system).createJobSchedule(toBeDeletedAllJobName2, receiver, Tick, Some("Creating new dynamic schedule for deleteAll test"), "*/7 * * ? * *")
+
+      noException should be thrownBy {
+        // Deleting all scheduled jobs
+        QuartzSchedulerExtension(_system).deleteAll()
+
+        // Create a new schedule job reusing former toBeDeletedAllJobName1. This will fail if deleteAll is not effective.
+        val newJobDt1 = QuartzSchedulerExtension(_system).createJobSchedule(toBeDeletedAllJobName1, receiver, Tick, Some("Creating new dynamic schedule after deleteAll success"), "8 * * ? * *")
+        val jobCalender1 = Calendar.getInstance()
+        jobCalender1.setTime(newJobDt1)
+        jobCalender1.get(Calendar.SECOND) mustEqual 8
+
+        // Create a new schedule job reusing former toBeDeletedAllJobName2. This will fail if deleteAll is not effective.
+        val newJobDt2 = QuartzSchedulerExtension(_system).createJobSchedule(toBeDeletedAllJobName2, receiver, Tick, Some("Creating new dynamic schedule after deleteAll success"), "9 * * ? * *")
+        val jobCalender2 = Calendar.getInstance()
+        jobCalender2.setTime(newJobDt2)
+        jobCalender2.get(Calendar.SECOND) mustEqual 9
+      }
+    }
+  }
+
   case class NewProbe(probe: ActorRef)
   case object Tick
   case object Tock
