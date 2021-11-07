@@ -2,6 +2,9 @@
 
 Every good library has a changelog.
 
+## Version 1.9.2 ##
+* Added `deleteAll` method. PR [#109](https://github.com/enragedginger/akka-quartz-scheduler/pull/109)
+
 ## Version 1.9.1 ##
 * Fixed `Delayed Setup & Execute a Cron Job` test case at `QuartzTypedSchedulerFunctionalSpec`.
 * Updated to Scala `2.12.13` and `2.13.5`.
