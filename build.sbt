@@ -13,6 +13,7 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka"   %% "akka-actor-typed" % "2.6.10" % "provided",
   "org.quartz-scheduler" % "quartz"           % "2.3.2"
     exclude ("com.zaxxer", "HikariCP-java7"),
+  "net.redhogs.cronparser" % "cron-parser-core" % "3.5",
   "com.typesafe.akka" %% "akka-testkit"             % "2.6.10" % Test,
   "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.10" % Test,
   "org.specs2"        %% "specs2-core"              % "4.5.1"  % Test,
