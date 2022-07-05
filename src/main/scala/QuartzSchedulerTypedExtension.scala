@@ -32,7 +32,7 @@ class QuartzSchedulerTypedExtension(system: ActorSystem[_]) extends QuartzSchedu
    */
   def createTypedJobSchedule[T](
                          name: String, receiver: ActorRef[T], msg: T, description: Option[String] = None,
-                         cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone) = {
+                         cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone): Date = {
     createSchedule(name, description, cronExpression, calendar, timezone)
     scheduleTyped(name, receiver, msg)
   }

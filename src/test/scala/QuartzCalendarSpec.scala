@@ -13,27 +13,26 @@ import scala.collection.JavaConverters._
 import org.quartz.impl.calendar._
 
 @RunWith(classOf[JUnitRunner])
-class QuartzCalendarSpec extends Specification with ThrownExpectations { def is =
-  sequential ^
-  "This is a specification to validate the behavior of the Quartz Calendar configuration modelling"   ^
-                                                            p ^
-  "The configuration parser should"                           ^
-    "Fetch a list of all calendars in a configuration block"  ! parseCalendarList ^
-    "Be able to parse and create an Annual calendar"          ! parseAnnual ^
-    "Be able to parse and create a Holiday calendar"          ! parseHoliday ^
-    "Be able to parse and create a Daily calendar"            ^
-        "With a standard entry"                               ! parseDaily ^
-                                                            p ^
-    "Be able to parse and create a Monthly calendar"          ^
-        "With just one day (a list, but single digit)"        ! parseMonthlyOneDay ^
-        "With a list (multiple digits)"                       ! parseMonthlyList ^
-                                                            p ^
-    "Be able to parse and create a Weekly calendar"           ^
-        "With Ints for Day Names"                             ! parseWeeklyInt ^
-                                                            p ^
-    "Be able to parse and create a Cron calendar"             ! parseCronStyle ^
-                                                                end
+class QuartzCalendarSpec extends Specification with ThrownExpectations {
+  def is = s2"""
+    This is a specification to validate the behavior of the Quartz Calendar configuration modelling
 
+    The configuration parser should
+      Fetch a list of all calendars in a configuration block   $parseCalendarList
+      Be able to parse and create an Annual calendar           $parseAnnual
+      Be able to parse and create a Holiday calendar           $parseHoliday
+      Be able to parse and create a Daily calendar
+          With a standard entry                                $parseDaily
+
+      Be able to parse and create a Monthly calendar
+          With just one day (a list, but single digit)         $parseMonthlyOneDay
+          With a list (multiple digits)                        $parseMonthlyList
+
+      Be able to parse and create a Weekly calendar
+          With Ints for Day Names                              $parseWeeklyInt
+
+      Be able to parse and create a Cron calendar              $parseCronStyle
+    """
 
   def parseCalendarList = {
     //TODO - more robust check
@@ -64,20 +63,18 @@ class QuartzCalendarSpec extends Specification with ThrownExpectations { def is 
     cal.isDayExcluded(getCalendar(DECEMBER, 31, 2075)) must beFalse
   }
 
- def parseHoliday = {
-   calendars must haveKey("Easter")
-   calendars("Easter") must haveClass[HolidayCalendar]
+  def parseHoliday = {
+    calendars must haveKey("Easter")
+    calendars("Easter") must haveClass[HolidayCalendar]
 
-   calendars("Easter").asInstanceOf[HolidayCalendar].getExcludedDates.asScala must containAllOf(List(
-     getDate(2013, 3, 31),
-     getDate(2014, 4, 20),
-     getDate(2015, 4,  5),
-     getDate(2016, 3, 27),
-     getDate(2017, 4, 16)
-   ))
-
- }
-
+    calendars("Easter").asInstanceOf[HolidayCalendar].getExcludedDates.asScala must containAllOf(List(
+      getDate(2013, 3, 31),
+      getDate(2014, 4, 20),
+      getDate(2015, 4,  5),
+      getDate(2016, 3, 27),
+      getDate(2017, 4, 16)
+    ))
+  }
 
   def parseDaily = {
     calendars must haveKey("HourOfTheWolf")

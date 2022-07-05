@@ -68,7 +68,7 @@ class SimpleActorMessageJob extends Job {
    *
    * @throws JobExecutionException
    */
-  def execute(context: JobExecutionContext) {
+  def execute(context: JobExecutionContext): Unit = {
     implicit val dataMap: JobDataMap = context.getJobDetail.getJobDataMap
     val key  = context.getJobDetail.getKey
 
@@ -88,13 +88,13 @@ class SimpleActorMessageJob extends Job {
             previousFiringTime = Option(context.getPreviousFireTime),
             nextFiringTime = Option(context.getNextFireTime)
           )
-        case any: Any => any
+        case any => any
       }
       val log = Logging(logBus, this)
       log.debug("Triggering job '{}', sending '{}' to '{}'", key.getName, msg, receiver)
       receiver match {
         case ref: ActorRef => ref ! msg
-        case ref: typed.ActorRef[AnyRef] => ref ! msg
+        case ref: typed.ActorRef[_] => ref.asInstanceOf[typed.ActorRef[AnyRef]] ! msg
         case selection: ActorSelection => selection ! msg
         case eventStream: EventStream => eventStream.publish(msg)
         case _ => throw new JobExecutionException("receiver as not expected type, must be ActorRef or ActorSelection, was %s".format(receiver.getClass))
