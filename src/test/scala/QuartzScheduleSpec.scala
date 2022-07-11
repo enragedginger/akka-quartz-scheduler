@@ -13,14 +13,14 @@ import org.quartz.TriggerUtils
 import scala.collection.JavaConverters._
 
 @RunWith(classOf[JUnitRunner])
-class QuartzScheduleSpec extends Specification with ThrownExpectations { def is =
-  sequential ^
-  "This is a specification to validate the behavior of the Quartz Schedule configuration parser" ^
-    "The configuration parser should"                            ^
-      "Fetch a list of all schedules in the configuration block" ! parseScheduleList ^
-      "Be able to parse out a cron schedule"                     ! parseCronSchedule ^
-      "Be able to parse out a cron schedule w/ calendars"        ! parseCronScheduleCalendars ^
-                                                                   end
+class QuartzScheduleSpec extends Specification with ThrownExpectations {
+  def is = s2"""
+    This is a specification to validate the behavior of the Quartz Schedule configuration parser
+      The configuration parser should
+        Fetch a list of all schedules in the configuration block $parseScheduleList
+        Be able to parse out a cron schedule                     $parseCronSchedule
+        Be able to parse out a cron schedule w/ calendars        $parseCronScheduleCalendars
+    """
 
   def parseScheduleList = {
     schedules must haveSize(2)

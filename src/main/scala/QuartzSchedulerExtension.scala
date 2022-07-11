@@ -2,11 +2,10 @@ package com.typesafe.akka.extension.quartz
 
 import java.text.ParseException
 import java.util.{Date, TimeZone}
-
 import akka.actor._
 import akka.event.{EventStream, Logging}
 import com.typesafe.config.Config
-import org.quartz._
+import org.quartz.{Scheduler, _}
 import org.quartz.core.jmx.JobDataMapSupport
 import org.quartz.impl.DirectSchedulerFactory
 import org.quartz.simpl.{RAMJobStore, SimpleThreadPool}
@@ -17,7 +16,7 @@ import scala.util.control.Exception._
 
 
 object QuartzSchedulerExtension extends ExtensionId[QuartzSchedulerExtension] with ExtensionIdProvider {
-  override def lookup = QuartzSchedulerExtension
+  override def lookup: QuartzSchedulerExtension.type = QuartzSchedulerExtension
 
   override def createExtension(system: ExtendedActorSystem): QuartzSchedulerExtension =
     new QuartzSchedulerExtension(system)
@@ -35,21 +34,21 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
 
 
   // todo - use of the circuit breaker to encapsulate quartz failures?
-  def schedulerName = "QuartzScheduler~%s".format(system.name)
+  def schedulerName: String = "QuartzScheduler~%s".format(system.name)
 
   protected def config: Config = system.settings.config.getConfig("akka.quartz").root.toConfig
 
   
   // The # of threads in the pool
-  val threadCount = config.getInt("threadPool.threadCount")
+  val threadCount: Int = config.getInt("threadPool.threadCount")
   require(threadCount >= 1, "Quartz Thread Count (akka.quartz.threadPool.threadCount) must be a positive integer.")
-  val threadPriority = config.getInt("threadPool.threadPriority")
+  val threadPriority: Int = config.getInt("threadPool.threadPriority")
   require(threadPriority >= 1 && threadPriority <= 10,
     "Quartz Thread Priority (akka.quartz.threadPool.threadPriority) must be a positive integer between 1 (lowest) and 10 (highest).")
   // Should the threads we create be daemonic? FYI Non-daemonic threads could make akka / jvm shutdown difficult
-  val daemonThreads_? = config.getBoolean("threadPool.daemonThreads")
+  val daemonThreads_? : Boolean = config.getBoolean("threadPool.daemonThreads")
   // Timezone to use unless specified otherwise
-  val defaultTimezone = TimeZone.getTimeZone(config.getString("defaultTimezone"))
+  val defaultTimezone: TimeZone = TimeZone.getTimeZone(config.getString("defaultTimezone"))
 
   /**
    * Parses job and trigger configurations, preparing them for any code request of a matching job.
@@ -62,7 +61,7 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
 
   log.debug("Configured Schedules: {}", schedules)
 
-  scheduler.start
+  scheduler.start()
 
   initialiseCalendars()
 
@@ -72,7 +71,7 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
    */
   def standby(): Unit = scheduler.standby()
 
-  def isInStandbyMode = scheduler.isInStandbyMode
+  def isInStandbyMode: Boolean = scheduler.isInStandbyMode
 
   /**
     * Starts up the scheduler. This is typically used from userspace only to restart
@@ -81,22 +80,20 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
     * @return True if calling this function resulted in the starting of the scheduler; false if the scheduler
     *         was already started.
     */
-  def start(): Boolean = isStarted match {
-    case true =>
-      log.warning("Cannot start scheduler, already started.")
-      false
-    case false =>
-      scheduler.start
-      true
+  def start(): Boolean = if (isStarted) {
+    log.warning("Cannot start scheduler, already started.")
+    false
+  } else {
+    scheduler.start()
+    true
   }
 
-  def isStarted = scheduler.isStarted
+  def isStarted: Boolean = scheduler.isStarted
 
   /**
    * Returns the next Date a schedule will be fired
    */
   def nextTrigger(name: String): Option[Date] = {
-    import scala.collection.JavaConverters._
     for {
       jobKey <- runningJobs.get(name)
       trigger <- scheduler.getTriggersOfJob(jobKey).asScala.headOption
@@ -116,7 +113,7 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
     *
     * @param waitForJobsToComplete wait for jobs to complete? default to false
     */
-  def shutdown(waitForJobsToComplete: Boolean = false) = {
+  def shutdown(waitForJobsToComplete: Boolean = false): Unit = {
     scheduler.shutdown(waitForJobsToComplete)
   }
 
@@ -202,7 +199,7 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
    */
   def createJobSchedule(
       name: String, receiver: ActorRef, msg: AnyRef, description: Option[String] = None, 
-      cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone) = { 
+      cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone): Date = {
     createSchedule(name, description, cronExpression, calendar, timezone)
     schedule(name, receiver, msg)
   }  
@@ -274,7 +271,7 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
    *
    */
   def createSchedule(name: String, description: Option[String] = None, cronExpression: String, calendar: Option[String] = None,
-                     timezone: TimeZone = defaultTimezone) {
+                     timezone: TimeZone = defaultTimezone): Unit = {
     val expression = catching(classOf[ParseException]) either new CronExpression(cronExpression) match {
       case Left(t) =>
         throw new IllegalArgumentException(s"Invalid 'expression' for Cron Schedule '$name'. Failed to validate CronExpression.", t)
@@ -396,7 +393,6 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
    * @return A date, which indicates the first time the trigger will fire.
    */
   private[quartz] def scheduleJob(name: String, receiver: AnyRef, msg: AnyRef, startDate: Option[Date])(schedule: QuartzSchedule): Date = {
-    import scala.collection.JavaConverters._
     log.info("Setting up scheduled job '{}', with '{}'", name, schedule)
     val jobDataMap = Map[String, AnyRef](
       "logBus" -> system.eventStream,
@@ -426,7 +422,7 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
   /**
    * Parses calendar configurations, creates Calendar instances and attaches them to the scheduler
    */
-  protected def initialiseCalendars() {
+  protected def initialiseCalendars(): Unit = {
     for ((name, calendar) <- QuartzCalendars(config, defaultTimezone)) {
       log.info("Configuring Calendar '{}'", name)
       scheduler.addCalendar(name, calendar, true, true)
@@ -436,7 +432,7 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
 
 
 
-  lazy protected val threadPool = {
+  lazy protected val threadPool: SimpleThreadPool = {
     // todo - wrap one of the Akka thread pools with the Quartz interface?
     val _tp = new SimpleThreadPool(threadCount, threadPriority)
     _tp.setThreadNamePrefix("AKKA_QRTZ_") // todo - include system name?
@@ -449,7 +445,7 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
     new RAMJobStore()
   }
 
-  lazy protected val scheduler = {
+  lazy protected val scheduler: Scheduler = {
     // because it's a java API ... initialize the scheduler, THEN get and start it.
     DirectSchedulerFactory.getInstance.createScheduler(schedulerName, system.name, /* todo - will this clash by quartz' rules? */
       threadPool, jobStore)

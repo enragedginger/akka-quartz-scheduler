@@ -119,6 +119,6 @@ final class QuartzCronSchedule(val name: String,
   type T = CronTrigger
 
   // Do *NOT* build, we need the uncompleted builder. I hate the Quartz API, truly.
-  val schedule = CronScheduleBuilder.cronSchedule(expression).inTimeZone(timezone)
+  val schedule: CronScheduleBuilder = CronScheduleBuilder.cronSchedule(expression).inTimeZone(timezone)
 }
 
