@@ -2,6 +2,9 @@
 
 Every good library has a changelog.
 
+## Version 1.9.3 ##
+* Added support for Scala 3. PR [#114](https://github.com/enragedginger/akka-quartz-scheduler/pull/114)
+
 ## Version 1.9.2 ##
 * Added `deleteAll` method. PR [#109](https://github.com/enragedginger/akka-quartz-scheduler/pull/109)
 

@@ -2,13 +2,13 @@ name := "akka-quartz-scheduler"
 
 organization := "com.enragedginger"
 
-version := "1.9.2-akka-2.6.x"
+version := "1.9.3-akka-2.6.x"
 
 val Scala212Version = "2.12.13"
 val Scala213Version = "2.13.8"
 val Scala3Version = "3.1.3"
 
-ThisBuild / scalaVersion := Scala213Version
+ThisBuild / scalaVersion := Scala3Version
 ThisBuild / crossScalaVersions := Seq(Scala212Version, Scala213Version, Scala3Version)
 ThisBuild / scalacOptions ++= Seq("-language:postfixOps")
 
