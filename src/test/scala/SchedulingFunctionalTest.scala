@@ -1,4 +1,4 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 
 import com.typesafe.config.{Config, ConfigFactory}
 
@@ -7,8 +7,8 @@ object SchedulingFunctionalTest {
   val tickTolerance = 1000
 
   lazy val sampleConfiguration: Config = { ConfigFactory.parseString("""
-    akka {
-      event-handlers = ["akka.testkit.TestEventListener"]
+    pekko {
+      event-handlers = ["pekko.testkit.TestEventListener"]
       loglevel = "INFO"
       quartz {
         defaultTimezone = "UTC"

@@ -1,8 +1,8 @@
-name := "akka-quartz-scheduler"
+name := "pekko-quartz-scheduler"
 
 organization := "com.enragedginger"
 
-version := "1.9.3-akka-2.6.x"
+version := "1.9.3-pekko-1.0.x"
 
 val Scala212Version = "2.12.13"
 val Scala213Version = "2.13.8"
@@ -12,13 +12,15 @@ ThisBuild / scalaVersion := Scala3Version
 ThisBuild / crossScalaVersions := Seq(Scala212Version, Scala213Version, Scala3Version)
 ThisBuild / scalacOptions ++= Seq("-language:postfixOps")
 
+val pekkoVersion = "0.0.0+26592-864ee821-SNAPSHOT"
+
 libraryDependencies ++= Seq(
-  "com.typesafe.akka"   %% "akka-actor"       % "2.6.19" % "provided",
-  "com.typesafe.akka"   %% "akka-actor-typed" % "2.6.19" % "provided",
+  "org.apache.pekko"   %% "pekko-actor"       % pekkoVersion % "provided",
+  "org.apache.pekko"   %% "pekko-actor-typed" % pekkoVersion % "provided",
   "org.quartz-scheduler" % "quartz"           % "2.3.2"
     exclude ("com.zaxxer", "HikariCP-java7"),
-  "com.typesafe.akka" %% "akka-testkit"             % "2.6.19" % Test,
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % "2.6.19" % Test,
+  "org.apache.pekko" %% "pekko-testkit"             % pekkoVersion % Test,
+  "org.apache.pekko" %% "pekko-actor-testkit-typed" % pekkoVersion % Test,
   "org.specs2"        %% "specs2-core"              % "4.15.0" % Test,
   "org.specs2"        %% "specs2-junit"             % "4.15.0" % Test,
   "junit"              % "junit"                    % "4.12"   % Test,
@@ -28,6 +30,7 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+resolvers += "Apache Snapshots" at "https://repository.apache.org/content/groups/snapshots"
 
 pomIncludeRepository := { _ => false }
 
@@ -43,7 +46,7 @@ publishTo := {
 
 //useGpg := true
 
-pomExtra := <url>https://github.com/enragedginger/akka-quartz-scheduler</url>
+pomExtra := <url>https://github.com/enragedginger/pekko-quartz-scheduler</url>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -52,8 +55,8 @@ pomExtra := <url>https://github.com/enragedginger/akka-quartz-scheduler</url>
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/enragedginger/akka-quartz-scheduler.git</url>
-        <connection>https://github.com/enragedginger/akka-quartz-scheduler.git</connection>
+        <url>https://github.com/enragedginger/pekko-quartz-scheduler.git</url>
+        <connection>https://github.com/enragedginger/pekko-quartz-scheduler.git</connection>
     </scm>
     <developers>
         <developer>

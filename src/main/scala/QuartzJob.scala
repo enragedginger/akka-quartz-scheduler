@@ -1,7 +1,7 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 
-import akka.actor.{ActorRef, ActorSelection, typed}
-import akka.event.{EventStream, Logging, LoggingBus}
+import org.apache.pekko.actor.{ActorRef, ActorSelection, typed}
+import org.apache.pekko.event.{EventStream, Logging, LoggingBus}
 import org.quartz.{Job, JobDataMap, JobExecutionContext, JobExecutionException}
 
 /**
