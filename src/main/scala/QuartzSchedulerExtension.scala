@@ -1,9 +1,9 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 
 import java.text.ParseException
 import java.util.{Date, TimeZone}
-import akka.actor._
-import akka.event.{EventStream, Logging}
+import org.apache.pekko.actor._
+import org.apache.pekko.event.{EventStream, Logging}
 import com.typesafe.config.Config
 import org.quartz.{Scheduler, _}
 import org.quartz.core.jmx.JobDataMapSupport
@@ -36,16 +36,16 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
   // todo - use of the circuit breaker to encapsulate quartz failures?
   def schedulerName: String = "QuartzScheduler~%s".format(system.name)
 
-  protected def config: Config = system.settings.config.getConfig("akka.quartz").root.toConfig
+  protected def config: Config = system.settings.config.getConfig("pekko.quartz").root.toConfig
 
   
   // The # of threads in the pool
   val threadCount: Int = config.getInt("threadPool.threadCount")
-  require(threadCount >= 1, "Quartz Thread Count (akka.quartz.threadPool.threadCount) must be a positive integer.")
+  require(threadCount >= 1, "Quartz Thread Count (pekko.quartz.threadPool.threadCount) must be a positive integer.")
   val threadPriority: Int = config.getInt("threadPool.threadPriority")
   require(threadPriority >= 1 && threadPriority <= 10,
-    "Quartz Thread Priority (akka.quartz.threadPool.threadPriority) must be a positive integer between 1 (lowest) and 10 (highest).")
-  // Should the threads we create be daemonic? FYI Non-daemonic threads could make akka / jvm shutdown difficult
+    "Quartz Thread Priority (pekko.quartz.threadPool.threadPriority) must be a positive integer between 1 (lowest) and 10 (highest).")
+  // Should the threads we create be daemonic? FYI Non-daemonic threads could make pekko / jvm shutdown difficult
   val daemonThreads_? : Boolean = config.getBoolean("threadPool.daemonThreads")
   // Timezone to use unless specified otherwise
   val defaultTimezone: TimeZone = TimeZone.getTimeZone(config.getString("defaultTimezone"))
@@ -433,9 +433,9 @@ class QuartzSchedulerExtension(system: ActorSystem) extends Extension {
 
 
   lazy protected val threadPool: SimpleThreadPool = {
-    // todo - wrap one of the Akka thread pools with the Quartz interface?
+    // todo - wrap one of the Pekko thread pools with the Quartz interface?
     val _tp = new SimpleThreadPool(threadCount, threadPriority)
-    _tp.setThreadNamePrefix("AKKA_QRTZ_") // todo - include system name?
+    _tp.setThreadNamePrefix("PEKKO_QRTZ_") // todo - include system name?
     _tp.setMakeThreadsDaemons(daemonThreads_?)
     _tp
   }

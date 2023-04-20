@@ -1,6 +1,6 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 
-import akka.event.LogSource
+import org.apache.pekko.event.LogSource
 
 /**
  * Package imports, for things like implicits shared across the system.

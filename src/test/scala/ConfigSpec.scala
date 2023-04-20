@@ -1,4 +1,4 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 package test
 
 import com.typesafe.config.ConfigFactory
@@ -20,14 +20,14 @@ class ConfigSpec extends Specification with ThrownExpectations {
   lazy val reference = ConfigFactory.load("reference.conf")
 
   def parseReferenceThreadPool = {
-    reference.getInt("akka.quartz.threadPool.threadCount") mustEqual 1
-    reference.getInt("akka.quartz.threadPool.threadPriority") mustEqual 5
-    reference.getBoolean("akka.quartz.threadPool.daemonThreads") mustEqual true
-    reference.getInt("akka.quartz.threadPool.threadCount") mustEqual 1
+    reference.getInt("pekko.quartz.threadPool.threadCount") mustEqual 1
+    reference.getInt("pekko.quartz.threadPool.threadPriority") mustEqual 5
+    reference.getBoolean("pekko.quartz.threadPool.daemonThreads") mustEqual true
+    reference.getInt("pekko.quartz.threadPool.threadCount") mustEqual 1
   }
 
   def parseReferenceTimezone = {
-    reference.getString("akka.quartz.defaultTimezone") mustEqual "UTC"
+    reference.getString("pekko.quartz.defaultTimezone") mustEqual "UTC"
   }
 
 }

@@ -1,8 +1,8 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 
-import akka.actor._
-import akka.japi.Option.Some
-import akka.testkit._
+import org.apache.pekko.actor._
+import org.apache.pekko.japi.Option.Some
+import org.apache.pekko.testkit._
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.must.Matchers

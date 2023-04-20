@@ -1,12 +1,12 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 
-import akka.actor.testkit.typed.FishingOutcome
-import akka.actor.testkit.typed.scaladsl.ActorTestKit
-import akka.actor.typed.eventstream.EventStream
-import akka.actor.typed.eventstream.EventStream.Subscribe
-import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, Behavior}
-import akka.japi.Option.Some
+import org.apache.pekko.actor.testkit.typed.FishingOutcome
+import org.apache.pekko.actor.testkit.typed.scaladsl.ActorTestKit
+import org.apache.pekko.actor.typed.eventstream.EventStream
+import org.apache.pekko.actor.typed.eventstream.EventStream.Subscribe
+import org.apache.pekko.actor.typed.scaladsl.Behaviors
+import org.apache.pekko.actor.typed.{ActorRef, Behavior}
+import org.apache.pekko.japi.Option.Some
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.matchers.must.Matchers

@@ -1,6 +1,6 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 
-import akka.actor.typed.{ActorRef, ActorSystem, Extension, ExtensionId}
+import org.apache.pekko.actor.typed.{ActorRef, ActorSystem, Extension, ExtensionId}
 
 import java.util.{Date, TimeZone}
 
