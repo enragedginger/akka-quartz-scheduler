@@ -1,6 +1,8 @@
+import xerial.sbt.Sonatype._
+import sbt.sbtpgp.Compat._
 name := "pekko-quartz-scheduler"
 
-organization := "com.github.samueleresca"
+organization := "io.github.samueleresca"
 
 version := "0.0.1-pekko-1.0.x"
 
@@ -9,6 +11,7 @@ val Scala213Version = "2.13.8"
 val Scala3Version = "3.1.3"
 val PekkoVersion = "1.0.1"
 
+ThisBuild / scalaVersion := Scala213Version
 ThisBuild / crossScalaVersions := Seq(Scala212Version, Scala213Version, Scala3Version)
 ThisBuild / scalacOptions ++= Seq("-language:postfixOps")
 
@@ -28,36 +31,18 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
-
+// Sonatype release settings
 pomIncludeRepository := { _ => false }
-
+sonatypeCredentialHost := "s01.oss.sonatype.org"
+publishTo := sonatypePublishToBundle.value
+sonatypeProjectHosting := Some(
+  GitHubHosting(user = "samueleresca", repository = "pekko-quartz-scheduler", email = "samuele.resca@gmail.com"))
+  // Metadata referrsing to licenses, website, and SCM (source code management)
+licenses:= Seq(
+  "APL2" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt"))
+sonatypeProfileName := "io.github.samueleresca"
 publishMavenStyle := true
-
-publishTo := {
-  val nexus = "https://oss.sonatype.org/"
-  if (isSnapshot.value)
-    Some("snapshots" at nexus + "content/repositories/snapshots")
-  else
-    Some("releases" at nexus + "service/local/staging/deploy/maven2")
-}
-
-//useGpg := true
-
-pomExtra := <url>https://github.com/samueleresca/pekko-quartz-scheduler</url>
-    <licenses>
-        <license>
-            <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-        </license>
-    </licenses>
-    <scm>
-        <url>https://github.com/samueleresca/pekko-quartz-scheduler.git</url>
-        <connection>https://github.com/samueleresca/pekko-quartz-scheduler.git</connection>
-    </scm>
-    <developers>
-        <developer>
-            <name>Samuele Resca</name>
-            <email>samuele.resca@gmail.com</email>
-        </developer>
-    </developers>
+scmInfo := Some(
+  ScmInfo(
+    url("https://github.com/samueleresca/pekko-quartz-scheduler"),
+    "scm:git@github.com:samueleresca/pekko-.git"))

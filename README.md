@@ -60,7 +60,7 @@ Usage of the `pekko-quartz-scheduler` component first requires including the nec
 
 ```scala
 // For Apache Pekko 1.0.x and Apache Pekko Typed Actors 1.0.x and Scala 2.12.x, 2.13.x, 3.1.x
-libraryDependencies += "com.github.samueleresca" %% "pekko-quartz-scheduler" % "1.0.0-pekko-1.0.x"
+libraryDependencies += "io.github.samueleresca" %% "pekko-quartz-scheduler" % "1.0.0-pekko-1.0.x"
 ```
 
 ### Usage Apache Pekko 1.0.x

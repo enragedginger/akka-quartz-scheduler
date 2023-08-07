@@ -10,6 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Adding Github Actions for building.
+- Adding `RELEASE.md` file.
+- Added release plugins in `build.sbt`
+
+## Changed
+
+- Updated groupId to `io.github.samueleresca`
 
 ## [0.0.1-pekko-1.0.x] - 2023-08-07
 
