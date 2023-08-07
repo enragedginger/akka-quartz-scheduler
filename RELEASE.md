@@ -12,9 +12,7 @@ The process for releasing a new version of the package:
         ```
     2. Run sbt by setting the key.
         ```bash
-        sbt \
-            "set pgpSigningKey := Some(\"$PGP_SIGNING_KEY_ID\")"
         sbt clean
-        sbt publishSigned
+        sbt "set pgpSigningKey := Some(\"$PGP_SIGNING_KEY_ID\")" publishSigned
         sbt sonatypeBundleRelease
         ```
