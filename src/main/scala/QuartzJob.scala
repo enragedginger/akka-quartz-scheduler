@@ -1,7 +1,7 @@
-package com.typesafe.akka.extension.quartz
+package org.apache.pekko.extension.quartz
 
-import akka.actor.{ActorRef, ActorSelection, typed}
-import akka.event.{EventStream, Logging, LoggingBus}
+import org.apache.pekko.actor.{ActorRef, ActorSelection, typed}
+import org.apache.pekko.event.{EventStream, Logging, LoggingBus}
 import org.quartz.{Job, JobDataMap, JobExecutionContext, JobExecutionException}
 
 /**
@@ -95,7 +95,7 @@ class SimpleActorMessageJob extends Job {
       receiver match {
         case ref: ActorRef => ref ! msg
         case ref: typed.ActorRef[_] => ref.asInstanceOf[typed.ActorRef[AnyRef]] ! msg
-        case selection: ActorSelection => selection ! msg
+        case selection: org.apache.pekko.actor.ActorSelection => selection ! msg
         case eventStream: EventStream => eventStream.publish(msg)
         case _ => throw new JobExecutionException("receiver as not expected type, must be ActorRef or ActorSelection, was %s".format(receiver.getClass))
       }

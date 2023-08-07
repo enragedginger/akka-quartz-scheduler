@@ -1,8 +1,8 @@
-package com.typesafe.akka.extension.quartz.test;
+package org.apache.pekko.extension.quartz.test;
 
 
-import akka.actor.ActorSystem;
-import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension;
+import org.apache.pekko.actor.ActorSystem;
+import org.apache.pekko.extension.quartz.QuartzSchedulerExtension;
 
 public class JavaCompileTest {
   

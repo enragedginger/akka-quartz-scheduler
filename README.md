@@ -1,21 +1,21 @@
-akka-quartz-scheduler
+pekko-quartz-scheduler
 =====================
 
-[![Build Status](https://api.travis-ci.org/enragedginger/akka-quartz-scheduler.svg?branch=master)](https://travis-ci.org/enragedginger/akka-quartz-scheduler)
+> This repository is the Apache Pekko variant of [enragedginger/akka-quartz-scheduler](https://github.com/enragedginger/akka-quartz-scheduler).
 
-Quartz Extension and utilities for true scheduling in Akka 2.6.x.
+Quartz Extension and utilities for true scheduling in Apache Pekko 1.0.x.
 
-Current release is built for Scala 2.13.x and Akka 2.6.x and is available on Maven Central. If you would like support
-for a different combination of Scala and Akka, simply post your request on the issues page (as well as a reason as to
+Current release is built for Scala 2.13.x and Apache Pekko 1.0.x and is available on Maven Central. If you would like support
+for a different combination of Scala and Apache Pekko, simply post your request on the issues page (as well as a reason as to
 why the currently available versions won't work for you. I'm always curious about these things).
 
-# Why Akka and Quartz?
+# Why Apache Pekko and Quartz?
 
-Note that this is named and targeted as akka-quartz-scheduler for a reason: it is *not* a complete port of Quartz.
+Note that this is named and targeted as pekko-quartz-scheduler for a reason: it is *not* a complete port of Quartz.
 Rather, we utilize the concepts of Quartz' scheduling system to provide a more robust and reliable scheduling component
-to Akka than the one already available.
+to Apache Pekko than the one already available.
 
-The goal here is to provide Akka with a scheduling system that is closer to what one would expect for Cron type jobs –
+The goal here is to provide Apache Pekko with a scheduling system that is closer to what one would expect for Cron type jobs –
 set up long-running ActorSystems that can have certain events kicked off by Quartz.
 
 There aren't currently any plans on having anything to do with the distributed transaction, persistence,
@@ -27,38 +27,21 @@ gives some ability to work around that, if need arises.
 
 ## Why Not Use $OtherComparableTool Instead?
 
-1. What's wrong with Akka's existing Scheduler?
+1. What's wrong with Apache Pekko's existing Scheduler?
     As Viktor Klang points out, 'Perhaps the name "Scheduler" was unfortunate,
     "Deferer" is probably more indicative of what it does.'
 
-    The Akka Scheduler is designed to setup events that happen based on durations from the current moment:
+    The Apache Pekko Scheduler is designed to setup events that happen based on durations from the current moment:
     You can say "fire this job in 15 minutes, every 30 minutes thereafter" but not "fire a job every day at 3pm".
 
-    Furthermore, Akka's default scheduler is executed around a [`HashedWheelTimer`](http://docs.jboss.org/netty/3.1/api/org/jboss/netty/util/HashedWheelTimer.html) –
+    Furthermore, Apache Pekko's default scheduler is executed around a [`HashedWheelTimer`](http://docs.jboss.org/netty/3.1/api/org/jboss/netty/util/HashedWheelTimer.html) –
     a potential precision loss for jobs, as it does not provide strong guarantees on the timeliness of execution.
-
-2. Why not just use the Quartz component in [Akka's Camel Extension](http://doc.akka.io/docs/akka/2.1.2/scala/camel.html)?
-
-    1. To begin with, Akka's Camel extension was *not* available in Akka 2.0.x, only in 2.1+
-    2. Camel brings with it a whole architecture change (`Consumers`, `Producers`, etc) and is not exactly "lightweight" to plug in if all you want is Quartz support.
-    3. We wanted to bring the scheduling concept of Quartz into Akka as cleanly as possible with native configuration integration and a lightweight feel.
-
-3. What about that other `akka-quartz` component up on GitHub?
-
-    The interface to this aforementioned `akka-quartz` component is via Actors - one creates an instance of an Actor that 
-    has its own Quartz Scheduler underneath it, and sends messages to that Actor to schedule jobs. Because it is an Actor
-    which provides no "Singleton"-like guarantee, it becomes too easy for users to accidentally spin up multiple scheduler
-    instances, each of which is backed by its own threadpool.
-    Instead, with `akka-quartz-scheduler` we use Akka's Extension system which provides
-    a plugin model – we guarantee only one Quartz Scheduler is *ever* spun up per `ActorSystem`. This means
-    we will never create anything but one single Thread Pool which you have control over the size of, for
-    any given `ActorSystem`.
 
 Finally, a common failure of the above listed alternatives is that configuration of things like a repeating schedule
 should be separated from code in a configuration file which an operations team (not the developers) can
-control. Thus, `akka-quartz-scheduler` only allows specifying the following in code: the name of a job, what actor to send
+control. Thus, `pekko-quartz-scheduler` only allows specifying the following in code: the name of a job, what actor to send
 the tick to, and the message to send on a tick. The configuration of how frequently to 'tick' on a schedule is
-externalised to the Akka configuration file; when a schedule request is made its name is matched up with an entry
+externalised to the Apache Pekko configuration file; when a schedule request is made its name is matched up with an entry
 in the config which specifies the rules the actual scheduling should follow.
 
 Thus, development can outline the skeleton of repeating jobs in their code, specifying only what to do WHEN a 'tick' of
@@ -68,65 +51,30 @@ the schedule of firing.
 This, among other things, prevents accidental mistakes such as changing a schedule in development for testing. A
 change of that sort is fixable without Operations needing to require a recompilation of source code.
 
-### TODO
-- investigate supporting listeners, with actor hookarounds.
-- misfires and recovery model - play nice with supervision, deathwatch, etc
-  [docs page 23 - very close to supervision strategy]
 
 ## Usage
 
 See CHANGELOG.md for a list of changes by release.
 
-Usage of the `akka-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
+Usage of the `pekko-quartz-scheduler` component first requires including the necessary dependency in your SBT project:
 
 ```scala
-// For Akka 2.6.x and Akka Typed Actors 2.6.x and Scala 2.12.x, 2.13.x, 3.1.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.9.3-akka-2.6.x"
-
-// For Akka 2.6.x and Scala 2.12.x, 2.13.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.5-akka-2.6.x"
-
-// For Akka 2.5.x and Scala 2.11.x, 2.12.x, 2.13.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.8.1-akka-2.5.x"
-
-// For Akka 2.4.x and Scala 2.11.x, 2.12.x
-libraryDependencies += "com.enragedginger" %% "akka-quartz-scheduler" % "1.6.0-akka-2.4.x"
+// For Apache Pekko 1.0.x and Apache Pekko Typed Actors 1.0.x and Scala 2.12.x, 2.13.x, 3.1.x
+libraryDependencies += "com.github.samueleresca" %% "pekko-quartz-scheduler" % "1.0.0-pekko-1.0.x"
 ```
 
-Note: As of Akka 2.6, [Scala 2.11 is no longer supported](https://doc.akka.io/docs/akka/current/project/migration-guide-2.5.x-2.6.x.html).
-If you wish to use newer versions of akka-quartz-scheduler, but you're stuck on Scala 2.11 for some reason, please open an issue / PR and we'll see what we can do.
+### Usage Apache Pekko 1.0.x
+From within your Apache Pekko project you can create and access a Typed Scheduler:
 
 ```scala
-//Older versions of the artifact for those that require pre Akka 2.3 or pre Scala 2.11
-//If you would like a current version of the artifact to be published for your required version
-//of Akka and Scala, simply file on issue on the project page.
-resolvers += "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/"
-
-
-// For Akka 2.0.x
-libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.0.x"
-// For Akka 2.1.x
-libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.1.x"
-// For Akka 2.2.x
-libraryDependencies += "com.typesafe.akka" %% "akka-quartz-scheduler" % "1.2.0-akka-2.2.x"
-// For Akka 2.3.x and Scala 2.10.4
-libraryDependencies += "com.typesafe.akka" % "akka-quartz-scheduler_2.10" % "1.4.0-akka-2.3.x"
-```
-
-Note that the version name includes the Akka revision (Previous releases included the Akka release in the artifact name, which broken Maven).
-
-### Akka Typed Actor (2.6.x)
-If you use newer Akka Actor version then, from within your Akka project you can create and access a Typed Scheduler:
-
-```scala
-// Akka Typed Actors sample.
-import com.typesafe.akka.extension.quartz.QuartzSchedulerTypedExtension
+// Apache pekko Typed Actors sample.
+import org.apache.pekko.extension.quartz.QuartzSchedulerTypedExtension
 
 val scheduler = QuartzSchedulerTypedExtension(typedSystem)
 
 ```
 
-Where `typedSystem` represents an instance of an Akka Typed `ActorSystem[-T]` – note that `QuartzSchedulerTypedExtension` 
+Where `typedSystem` represents an instance of an Apache Pekko Typed `ActorSystem[-T]` – note that `QuartzSchedulerTypedExtension` 
 is scoped to that `ActorSystem[-T]` and there will only ever be one instance of it per `ActorSystem[-T]`.
 
 The primary external method on the `scheduler` instance is `schedule`, used for scheduling a job:
@@ -151,79 +99,10 @@ will fire.
 
 Each time the Quartz schedule trigger fires, Quartz will send a copy of `msg` to your `receiver` actor.
 
-Note that you can use the same logic for scheduling Quartz with Akka Typed Actor as the older version.
-
-### Akka Actor (2.5.x)
-If you use old Akka Actor version then, from within your Akka project you can create and access a Scheduler:
-
-```scala
-// Akka Actors sample.
-import com.typesafe.akka.extension.quartz.QuartzSchedulerExtension
-
-val scheduler = QuartzSchedulerExtension(system)
-
-```
-
-Where `system` represents an instance of an Akka `ActorSystem` – note that `QuartzSchedulerExtension` is scoped
-to that `ActorSystem` and there will only ever be one instance of it per `ActorSystem`.
-
-The primary external method on the `scheduler` instance is `schedule`, used for scheduling a job:
-
-```scala
-def schedule(name: String, receiver: ActorRef, msg: AnyRef, startDate: Option[Date]): java.util.Date
-```
-OR
-```scala
-def schedule(name: String, receiver: ActorSelection, msg: AnyRef, startDate: Option[Date]): java.util.Date
-```
-
-The arguments to schedule are:
-
-- `name`: A `String` identifying the name of this schedule. This *must* match a schedule present in the configuration
-- `receiver`: An `ActorRef` or `ActorSelection`, who will be sent `msg` each time the schedule fires
-- `msg`: An `AnyRef`, representing a message instance which will be sent to `receiver` each time the schedule fires
-- `startDate`: An optional `Date`, for postponed start of a job. Defaults to now. 
-
-Invoking `schedule` returns an instance of `java.util.Date`, representing the first time the newly setup schedule
-will fire.
-
-Each time the Quartz schedule trigger fires, Quartz will send a copy of `msg` to your `receiver` actor.
-
-Here is an example, using a schedule called `Every30Seconds`, which sends a `Tick` message to a `CleanupActor` (which does hand wavy cleanup things):
-
-```scala
-case object Tick
-
-val cleaner = system.actorOf(Props[CleanupActor])
-
-QuartzSchedulerExtension(system).schedule("Every30Seconds", cleaner, Tick)
-```
-
-Where the `Tick` message is handled normally inside the Actor's message loop. If one wanted to ensure that schedule
-messages were dealt with more immediately than "normal" actor messages, they could utilize [Priority Mailboxes](http://doc.akka.io/docs/akka/2.4.1/scala/dispatchers.html).
-
-The details on the configuration of a job is outlined below in the section '*Schedule Configuration*'.
-
-### Returning scheduled Fire Time
-
-There are situations where the fire time is helpful. For example, when an error occurs, we know which job trigger is 
-being processed and can be recovered.
-
-Here is an example using the case class `MessageRequireFireTime` wrapping the `Tick` message.  This will send a
-`MessageWithFireTime(Tick, previousFireTime, scheduledFireTime, nextFireTime)` message to a `WorkerActor`:
-
-```scala
-case object Tick
-
-val worker = system.actorOf(Props[WorkerActor])
-
-QuartzSchedulerExtension(system).schedule("Every30Seconds", worker, MessageRequireFireTime(Tick))
-```
-
 ### Configuration of Quartz Scheduler
 
-All configuration of `akka-quartz-scheduler` is done inside of the Akka configuration file in an `akka.quartz` config
-block. Like Akka's configuration file, this follows the [HOCON Configuration Format](https://github.com/typesafehub/config/blob/master/HOCON.md).
+All configuration of `pekko-quartz-scheduler` is done inside of the Apache Pekko configuration file in an `pekko.quartz` config
+block. Like Apache Pekko's configuration file, this follows the [HOCON Configuration Format](https://github.com/typesafehub/config/blob/master/HOCON.md).
 Thus, any entries specified as `foo.bar.baz = x` can also be expressed as `foo { bar { baz = x } }`.
 
 At the top level of the configuration, optional values may be set which override the defaults for:
@@ -235,7 +114,7 @@ being executed. With only 1 thread, each trigger will queue up and you may not g
 - `threadPool.threadPriority` - **[Int]** A number, between 1 (Lowest priority) and 10 (Highest priority), specifying the priority to assign to Quartz' threads *DEFAULTS TO 5*
 - `threadPool.daemonThreads` - **[Boolean]** A boolean indicating whether the threads Quartz creates should execute as [Daemon Threads](http://stackoverflow.com/a/2213348) or not. *DEFAULTS TO TRUE*
 
-There are two 'primary' sub-blocks of the `akka.quartz` configuration, which are `schedules` and `calendars`.
+There are two 'primary' sub-blocks of the `pekko.quartz` configuration, which are `schedules` and `calendars`.
 
 #### Schedule Configuration
 
@@ -248,16 +127,16 @@ which is designed to match the standard Unix cron syntax with a few nice additio
 The schedule name in the configuration will be used to match it up with a requested job when `schedule` is invoked;
 case does not matter as the "Is there a matching job?" configuration lookup is case insensitive.
 
-The configuration block for schedules is in `akka.quartz.schedules`, with sub-entries being specified inside of a named
+The configuration block for schedules is in `pekko.quartz.schedules`, with sub-entries being specified inside of a named
 block, such that the configuration for a schedule named `Every30Seconds` would have its configuration values specified inside
-the configuration block `akka.quartz.schedules.Every30Seconds`.
+the configuration block `pekko.quartz.schedules.Every30Seconds`.
 
 The entries that can be placed inside of a schedule configuration are:
 
 - `expression` - **[String]** *[required]* a valid [Quartz' CronExpression](http://quartz-scheduler.org/api/2.1.7/org/quartz/CronExpression.html),
 which describes when this job should trigger. e.g. `expression = "*/30 * * ? * *"` would fire every 30 seconds, on every date (however,
 the firing schedule created by this expression is modified by the `calendars` variable, defined below)
-- `timezone` - **[String]** *[optional]*  the timezone in which to execute the schedule, *DEFAULTS TO `akka.quartz.defaultTimezone`, WHICH DEFAULTS TO **UTC***
+- `timezone` - **[String]** *[optional]*  the timezone in which to execute the schedule, *DEFAULTS TO `pekko.quartz.defaultTimezone`, WHICH DEFAULTS TO **UTC***
 must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String))
 - `description` - **[String]** *[optional]* a description of the job. *DEFAULTS TO null*. Mostly for human friendliness
 when they read your configuration aka "what this schedule is for", but set in Quartz as well for if you dump the scheduler contents
@@ -273,7 +152,7 @@ and is an optional String.
 An example schedule called `Every30Seconds` which, aptly, fires off every 30 seconds:
 
 ```
-akka {
+pekko {
   quartz {
     schedules {
       Every30Seconds {
@@ -291,21 +170,21 @@ This Schedule specifies a Cron Expression which executes every 30 seconds of eve
 
 #### Calendar Configuration
 
-Calendars in the `akka-quartz-scheduler` mirror the concept of [Quartz' Calendars](http://quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-04) –
+Calendars in the `pekko-quartz-scheduler` mirror the concept of [Quartz' Calendars](http://quartz-scheduler.org/documentation/quartz-2.x/tutorials/tutorial-lesson-04) –
 most specifically, they allow you to specify *exclusions* that override a schedule.
 
-Calendars are configured globally, in the `akka.quartz.calendars` configuration block. The definition of a calendar and what it excludes
+Calendars are configured globally, in the `pekko.quartz.calendars` configuration block. The definition of a calendar and what it excludes
 is made within this block. By default, no Calendars are applied to a Schedule. Instead, you must reference a named Calendar
 inside the `calendars` array of a Schedule's configuration, as outlined above.
 
-The configuration block for calendars is in `akka.quartz.calendars`, with sub-entries being specified inside of a named
+The configuration block for calendars is in `pekko.quartz.calendars`, with sub-entries being specified inside of a named
 block, such that the configuration for a calendar named `OnlyBusinessHours` would have it's configuration values specified inside
-the configuration block `akka.quartz.calendars.OnlyBusinessHours`.
+the configuration block `pekko.quartz.calendars.OnlyBusinessHours`.
 
 There are several types of Calendar, each with its own specific configurations. The configuration values which are common to *all* types of Calendar are:
 
 - `type` - **[String]** *[required]* a valid type of Calendar. Currently either: Annual, Holiday, Daily, Monthly, Weekly, and Cron
-- `timezone` - **[String]** *[optional]*  the timezone in which to execute the calendar, *DEFAULTS TO `akka.quartz.defaultTimezone`, WHICH DEFAULTS TO **UTC***
+- `timezone` - **[String]** *[optional]*  the timezone in which to execute the calendar, *DEFAULTS TO `pekko.quartz.defaultTimezone`, WHICH DEFAULTS TO **UTC***
 must be parseable by [`java.util.TimeZone.getTimeZone()`](http://docs.oracle.com/javase/7/docs/api/java/util/TimeZone.html#getTimeZone(java.lang.String))
 - `description` - **[String]** *[optional]* a description of the calendar. *DEFAULTS TO null*. Mostly for human friendliness
 when they read your configuration aka "what this calendar is for", but set in Quartz as well for if you dump the scheduler contents
@@ -437,7 +316,7 @@ These `JobSchedule` operations let you programatically manage job and job schedu
 all at once.
 *For working examples please check test section:*
 *"The Quartz Scheduling Extension with Dynamic create, update, delete JobSchedule operations"* 
-*in* `com.typesafe.akka.extension.quartz.QuartzSchedulerFunctionalSpec`
+*in* `org.apache.pekko.extension.quartz.QuartzSchedulerFunctionalSpec`
 
 
 #### Create JobSchedule
@@ -525,7 +404,7 @@ try {
 These mass operations let you manage many `JobSchedule`s at once.
 *For working examples please check test section:*
 *"The Quartz Scheduling Extension with Dynamic mass methods"*
-*in* `com.typesafe.akka.extension.quartz.QuartzSchedulerFunctionalSpec`
+*in* `org.apache.pekko.extension.quartz.QuartzSchedulerFunctionalSpec`
 
 #### Suspend All Schedules
 
