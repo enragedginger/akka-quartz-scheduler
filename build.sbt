@@ -4,7 +4,7 @@ name := "pekko-quartz-scheduler"
 
 organization := "io.github.samueleresca"
 
-version := "0.0.1-pekko-1.0.x"
+version := "1.0.0-pekko-1.0.x"
 
 val Scala212Version = "2.12.13"
 val Scala213Version = "2.13.8"
@@ -31,6 +31,7 @@ libraryDependencies ++= Seq(
 )
 
 resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
 // Sonatype release settings
 pomIncludeRepository := { _ => false }
 sonatypeCredentialHost := "s01.oss.sonatype.org"
@@ -45,4 +46,4 @@ publishMavenStyle := true
 scmInfo := Some(
   ScmInfo(
     url("https://github.com/samueleresca/pekko-quartz-scheduler"),
-    "scm:git@github.com:samueleresca/pekko-.git"))
+    "scm:git@github.com:samueleresca/pekko-quartz-scheduler.git"))
