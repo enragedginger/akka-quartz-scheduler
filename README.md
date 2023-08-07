@@ -1,6 +1,8 @@
 pekko-quartz-scheduler
 =====================
 
+[![Build](https://github.com/samueleresca/pekko-quartz-scheduler/actions/workflows/scala.yaml/badge.svg?branch=main)](https://github.com/samueleresca/pekko-quartz-scheduler/actions/workflows/scala.yaml)
+
 > This repository is the Apache Pekko variant of [enragedginger/akka-quartz-scheduler](https://github.com/enragedginger/akka-quartz-scheduler).
 
 Quartz Extension and utilities for true scheduling in Apache Pekko 1.0.x.

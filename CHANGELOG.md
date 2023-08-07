@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-# Changed
+## Added
+
+- Badge for build in `README.md`
+
+## Changed
 
 - Updated `RELEASE.md`
 
