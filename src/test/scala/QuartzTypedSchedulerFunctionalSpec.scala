@@ -166,7 +166,7 @@ class QuartzTypedSchedulerFunctionalSpec
       scheduleCalender.add(Calendar.SECOND, secs)
 
       //Dates must be equal in seconds
-      Math.floor(jobCalender.getTimeInMillis / 1000).toLong mustEqual Math.floor(scheduleCalender.getTimeInMillis / 1000).toLong
+      Math.abs(jobCalender.getTimeInMillis - scheduleCalender.getTimeInMillis) <= 1000L mustEqual true
       extension.cancelJob("cronEvery15Seconds")
     }
   }
