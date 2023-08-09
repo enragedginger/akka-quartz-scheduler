@@ -5,15 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
-
-## Added
-
-- Badge for build in `README.md`
+## [1.0.1-pekko-1.0.x]
 
 ## Changed
 
 - Updated `RELEASE.md`
+- Updated Scala 2.13 to `2.13.9`
+- Updated JUnit to `4.13.1`
+- Badge for build in `README.md`
 
 ## [1.0.0-pekko-1.0.x]
 
@@ -34,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrating codebase from Akka to Apache Pekko.
 
 
-[unreleased]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/1.0.0-pekko-1.0.x...HEAD
+[unreleased]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/1.0.1-pekko-1.0.x...HEAD
+[1.0.1-pekko-1.0.x]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/1.0.0-pekko-1.0.x...1.0.1-pekko-1.0.x
 [1.0.0-pekko-1.0.x]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/0.0.1-pekko-1.0.x...1.0.0-pekko-1.0.x
 [0.0.1-pekko-1.0.x]: https://github.com/samueleresca/pekko-quartz-scheduler/releases/tag/0.0.1-pekko-1.0.x
