@@ -7,7 +7,7 @@ organization := "io.github.samueleresca"
 version := "1.0.1-pekko-1.0.x"
 
 val Scala212Version = "2.12.18"
-val Scala213Version = "2.13.9"
+val Scala213Version = "2.13.11"
 val Scala3Version = "3.3.0"
 val PekkoVersion = "1.0.1"
 
