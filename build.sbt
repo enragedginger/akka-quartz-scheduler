@@ -8,7 +8,7 @@ version := "1.0.1-pekko-1.0.x"
 
 val Scala212Version = "2.12.13"
 val Scala213Version = "2.13.9"
-val Scala3Version = "3.1.3"
+val Scala3Version = "3.3.0"
 val PekkoVersion = "1.0.1"
 
 ThisBuild / scalaVersion := Scala213Version
