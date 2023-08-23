@@ -151,7 +151,7 @@ class QuartzSchedulerFunctionalSpec(_system: ActorSystem) extends TestKit(_syste
       scheduleCalender.add(Calendar.SECOND, secs)
 
       //Dates must be equal in seconds
-      Math.floor(jobCalender.getTimeInMillis / 1000).toLong mustEqual Math.floor(scheduleCalender.getTimeInMillis / 1000).toLong
+      Math.abs(jobCalender.getTimeInMillis - scheduleCalender.getTimeInMillis) <= 1000L mustEqual true
     }
 
     "Properly Setup & Execute a Cron Job with ActorSelection as receiver" in {
