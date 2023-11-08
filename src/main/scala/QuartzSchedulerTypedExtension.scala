@@ -7,14 +7,17 @@ import java.util.{Date, TimeZone}
 object QuartzSchedulerTypedExtension extends ExtensionId[QuartzSchedulerTypedExtension] {
 
   override def createExtension(system: ActorSystem[_]): QuartzSchedulerTypedExtension =
-    new QuartzSchedulerTypedExtension(system)
+    new QuartzSchedulerTypedExtension(QuartzSchedulerExtension(system.classicSystem))
 
   // Java API: retrieve the extension instance for the given system.
   def get(system: ActorSystem[_]): QuartzSchedulerTypedExtension = apply(system)
 
+  import scala.language.implicitConversions
+  implicit def _typedToUntyped(typed: QuartzSchedulerTypedExtension): QuartzSchedulerExtension = typed.untyped
+
 }
 
-class QuartzSchedulerTypedExtension(system: ActorSystem[_]) extends QuartzSchedulerExtension(system.classicSystem) with Extension {
+class QuartzSchedulerTypedExtension(private val untyped: QuartzSchedulerExtension) extends Extension {
 
   /**
    * Creates job, associated triggers and corresponding schedule at once.
@@ -32,8 +35,8 @@ class QuartzSchedulerTypedExtension(system: ActorSystem[_]) extends QuartzSchedu
    */
   def createTypedJobSchedule[T](
                          name: String, receiver: ActorRef[T], msg: T, description: Option[String] = None,
-                         cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone): Date = {
-    createSchedule(name, description, cronExpression, calendar, timezone)
+                         cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = untyped.defaultTimezone): Date = {
+    untyped.createSchedule(name, description, cronExpression, calendar, timezone)
     scheduleTyped(name, receiver, msg)
   }
 
@@ -53,7 +56,7 @@ class QuartzSchedulerTypedExtension(system: ActorSystem[_]) extends QuartzSchedu
    */
   def updateTypedJobSchedule[T](
                          name: String, receiver: ActorRef[T], msg: T, description: Option[String] = None,
-                         cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone): Date = {
+                         cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = untyped.defaultTimezone): Date = {
     rescheduleTypedJob(name, receiver, msg, description, cronExpression, calendar, timezone)
   }
 
@@ -70,11 +73,11 @@ class QuartzSchedulerTypedExtension(system: ActorSystem[_]) extends QuartzSchedu
    */
 
   def rescheduleTypedJob[T](name: String, receiver: ActorRef[T], msg: T, description: Option[String] = None,
-                    cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = defaultTimezone): Date = {
-    cancelJob(name)
-    removeSchedule(name)
-    createSchedule(name, description, cronExpression, calendar, timezone)
-    scheduleInternal(name, receiver, msg.asInstanceOf[AnyRef], None)
+                    cronExpression: String, calendar: Option[String] = None, timezone: TimeZone = untyped.defaultTimezone): Date = {
+    untyped.cancelJob(name)
+    untyped.removeSchedule(name)
+    untyped.createSchedule(name, description, cronExpression, calendar, timezone)
+    untyped.scheduleInternal(name, receiver, msg.asInstanceOf[AnyRef], None)
   }
 
   /**
@@ -85,7 +88,7 @@ class QuartzSchedulerTypedExtension(system: ActorSystem[_]) extends QuartzSchedu
    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
    * @return A date which indicates the first time the trigger will fire.
    */
-  def scheduleTyped[T](name: String, receiver: ActorRef[T], msg: T): Date = scheduleInternal(name, receiver, msg.asInstanceOf[AnyRef], None)
+  def scheduleTyped[T](name: String, receiver: ActorRef[T], msg: T): Date = untyped.scheduleInternal(name, receiver, msg.asInstanceOf[AnyRef], None)
 
   /**
    * Schedule a job, whose named configuration must be available
@@ -95,6 +98,6 @@ class QuartzSchedulerTypedExtension(system: ActorSystem[_]) extends QuartzSchedu
    * @param msg      A message object, which will be sent to `receiver` each time the schedule fires
    * @return A date which indicates the first time the trigger will fire.
    */
-  def scheduleTyped[T](name: String, receiver: ActorRef[T], msg: T, startDate: Option[Date]): Date = scheduleInternal(name, receiver, msg.asInstanceOf[AnyRef], startDate)
+  def scheduleTyped[T](name: String, receiver: ActorRef[T], msg: T, startDate: Option[Date]): Date = untyped.scheduleInternal(name, receiver, msg.asInstanceOf[AnyRef], startDate)
 
 }
