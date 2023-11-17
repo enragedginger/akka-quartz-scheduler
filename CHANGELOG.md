@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## Changed
+
+- Make Typed extension internally delegate to untyped see [#24](https://github.com/samueleresca/pekko-quartz-scheduler/pull/24)
 
 ## [1.1.0-pekko-1.0.x]
 
