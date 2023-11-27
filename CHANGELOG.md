@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.0-pekko-1.0.x]
+
 ## Changed
 
-- Make Typed extension internally delegate to untyped see [#24](https://github.com/samueleresca/pekko-quartz-scheduler/pull/24)
+- [#26](https://github.com/samueleresca/pekko-quartz-scheduler/pull/26) Update sbt-sonartype to `3.10.0`
+- [#24](https://github.com/samueleresca/pekko-quartz-scheduler/pull/24) Make Typed extension internally delegate to untyped see
+- [#22](https://github.com/samueleresca/pekko-quartz-scheduler/pull/22) Update sbt to `1.9.7`
+- [#19](https://github.com/samueleresca/pekko-quartz-scheduler/pull/19) Update scala-library to `2.13.6`
+- [#18](https://github.com/samueleresca/pekko-quartz-scheduler/pull/18) Update slf4j-api to `2.0.9`
+- [#17](https://github.com/samueleresca/pekko-quartz-scheduler/pull/17) Update scalatest to `3.2.17`
+- [#16](https://github.com/samueleresca/pekko-quartz-scheduler/pull/16) Update scala3-library to `3.3.1`
 
 ## [1.1.0-pekko-1.0.x]
 
@@ -47,7 +55,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Migrating codebase from Akka to Apache Pekko.
 
 
-[unreleased]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/1.1.0-pekko-1.0.x...HEAD
+[unreleased]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/1.2.0-pekko-1.0.x...HEAD
+[1.2.0-pekko-1.0.x]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/1.0.1-pekko-1.1.x...1.2.0-pekko-1.0.x
 [1.1.0-pekko-1.0.x]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/1.0.1-pekko-1.0.x...1.1.0-pekko-1.0.x
 [1.0.1-pekko-1.0.x]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/1.0.0-pekko-1.0.x...1.0.1-pekko-1.0.x
 [1.0.0-pekko-1.0.x]: https://github.com/samueleresca/pekko-quartz-scheduler/compare/0.0.1-pekko-1.0.x...1.0.0-pekko-1.0.x
